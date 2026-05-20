@@ -12,16 +12,34 @@
 
 ### ハッカソン要件
 - **応募締切**: 2026-06-01 (月) 23:59 ← **クリティカル**
-- 最終審査会: 2026-06-18 (木)
 - テーマ: "業務改革につながるAgentic AIを作ろう"
 - 必須技術: Azure / Copilot Studio + Microsoft AI技術
 - 提出物: 成果物公開URL、Zenn記事、GitHub URL (任意)
 - 賞: 個人部門 最優秀50万 / 優秀30万 / 特別20万 / 奨励10万×2
 - 公式: https://zenn.dev/hackathons/microsoft-agent-hackathon-2026
 
+### スケジュール (全日程)
+| 日付 | イベント |
+|---|---|
+| 2026-04-07 (火) | LP公開・申込開始 |
+| 2026-05-14 (木) 12:30〜14:30 | エントリーセッション (**企業部門のみ・任意**) |
+| **2026-06-01 (月) 23:59** | **申込・提出締切** |
+| 2026-06-02〜09 | 審査期間 |
+| 2026-06-10 (水) | 最終審査進出通知 |
+| 2026-06-11〜17 | ピッチ準備期間 (通過したチームのみ) |
+| 2026-06-18 (木) | 最終審査会・表彰式 |
+
+### 参加者特典 (重要)
+- **🎯 特設 Discord サーバー** — Microsoft エンジニアが直接サポート。Azure 設定で詰まったらここで聞ける (最大の特典)
+- 事前学習リソース:
+  - Microsoft Learn の AI エージェント開発パス
+  - YouTube トレーニング動画 (初学者向け・エージェント開発向け)
+  - Copilot Studio 参考コンテンツ
+- ※ ハッカソン専用の Azure クレジット (Azure Pass等) は **提供されていません** — 通常の無料アカウントを各自で作成 (→ [docs/SETUP_AZURE.md](./SETUP_AZURE.md))
+
 ---
 
-## 1. 現状ステータス (Last updated: 2026-05-21)
+## 1. 現状ステータス (Last updated: 2026-05-21, commit `a88a8e6` 以降)
 
 ### 完了 ✅
 | 項目 | 状態 | 参照 |
@@ -38,8 +56,10 @@
 | 初回コミット | ✅ | local commit `dbdb718` (リモート未push) |
 
 ### 未完了 / TODO
-- [ ] **ユーザ作業**: Azure無料アカウント作成 → `az login` / `azd auth login`
+- [ ] **ユーザ作業**: Azure無料アカウント作成 → `az login` / `azd auth login` ([詳細手順は SETUP_AZURE.md](./SETUP_AZURE.md))
+- [ ] **ユーザ作業**: Azure OpenAI 利用申請 ([SETUP_AZURE.md セクション7](./SETUP_AZURE.md#7--azure-openai-利用申請-重要最優先))
 - [ ] **ユーザ作業**: サンプル劣化請求書PDF (日英×2〜3 フォーマット) 5〜10枚を `samples/` に配置
+- [ ] **ユーザ作業**: ハッカソン特設 Discord に参加 (公式ページから招待リンク)
 - [ ] GitHubリモートリポジトリ作成 & `git push`
 - [ ] `azd up` 実行 → 出力値を `backend/.env` に貼り付け
 - [ ] バックエンドのローカル動作確認 (`uvicorn`)
@@ -223,8 +243,10 @@ python -c "from app.tools import document_intelligence as di; \
 
 ## 6. Azure デプロイ手順 (azd up 一発)
 
+> ⚠ **Azure をこれから初めて使う場合は、まず [docs/SETUP_AZURE.md](./SETUP_AZURE.md) を完了させてからこのセクションに戻ってきてください。** アカウント作成・CLI セットアップ・OpenAI 利用申請・予算アラートまでをカバーしています。
+
 ```bash
-# 0. 前提: Azure無料アカウント作成済 (https://azure.microsoft.com/ja-jp/free/)
+# 0. 前提: Azure無料アカウント作成済 + az/azd CLI ログイン済 (詳細: SETUP_AZURE.md)
 az login
 azd auth login
 
@@ -346,6 +368,16 @@ Azure エージェントが自己検証ループで抽出する Web アプリで
 
 ### ハッカソン
 - 公式: https://zenn.dev/hackathons/microsoft-agent-hackathon-2026
+- スケジュールタブ: https://zenn.dev/hackathons/microsoft-agent-hackathon-2026?tab=schedule
+- 事前学習 (公式案内):
+  - Microsoft Learn AI エージェント開発パス: https://learn.microsoft.com/training/ (検索で "AI Agent")
+  - YouTube Microsoft Developer チャンネル
+
+### Azure セットアップ
+- 本リポジトリの [docs/SETUP_AZURE.md](./SETUP_AZURE.md) — アカウント作成から `azd up` まで
+- Azure 無料アカウント: https://azure.microsoft.com/ja-jp/free/
+- Azure for Students: https://azure.microsoft.com/ja-jp/free/students/
+- Azure OpenAI 利用申請: https://aka.ms/oai/access
 
 ### Azure ドキュメント
 - Document Intelligence (prebuilt-invoice): https://learn.microsoft.com/azure/ai-services/document-intelligence/prebuilt/invoice
