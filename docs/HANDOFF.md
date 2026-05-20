@@ -39,7 +39,10 @@
 
 ---
 
-## 1. 現状ステータス (Last updated: 2026-05-21, commit `a88a8e6` 以降)
+## 1. 現状ステータス (Last updated: 2026-05-21)
+
+### 採用したデプロイ方針
+**Azure ポータルから手動でリソースを作成する** (Foundry 中心) パスを採用。`azd up` (Bicep) は付録扱い。理由は `docs/SETUP_AZURE.md` セクション 8 冒頭を参照。
 
 ### 完了 ✅
 | 項目 | 状態 | 参照 |
@@ -52,12 +55,16 @@
 | 数値検算ロジック + テスト | ✅ | `backend/app/tools/verify_math.py`, `backend/tests/test_verify_math.py` |
 | Next.js 16 + Tailwind v4 フロント | ✅ | `frontend/app/` (`tsc --noEmit` パス) |
 | アップロードUI / 結果テーブル / エージェントログUI | ✅ | `frontend/app/components/` |
-| Azure Bicep (azd up 一発デプロイ) | ✅ | `infra/main.bicep`, `infra/main-resources.bicep` |
-| 初回コミット | ✅ | local commit `dbdb718` (リモート未push) |
+| Azure Bicep (代替パス用・参考) | ✅ | `infra/main.bicep`, `infra/main-resources.bicep` (※Foundry 対応には書き換えが必要) |
+| Azure 無料アカウント作成 | ✅ | (ユーザ作業) |
+| **Microsoft Foundry リソース作成** | ✅ | East US / `rg-mahted-dev` / `mahted-foundry` (`proj-default`) |
+| 初回コミット | ✅ | local commit `dbdb718`, `a88a8e6`, `be86d70` (リモート未push) |
 
 ### 未完了 / TODO
-- [ ] **ユーザ作業**: Azure無料アカウント作成 → `az login` / `azd auth login` ([詳細手順は SETUP_AZURE.md](./SETUP_AZURE.md))
-- [ ] **ユーザ作業**: Azure OpenAI 利用申請 ([SETUP_AZURE.md セクション7](./SETUP_AZURE.md#7--azure-openai-利用申請-重要最優先))
+- [ ] **ユーザ作業**: Foundry ポータルで `gpt-4o` (2024-11-20, Global Standard, TPM 30K) をデプロイ ([SETUP_AZURE.md §8-2](./SETUP_AZURE.md#8-2-gpt-4o-モデルのデプロイ-foundry-ポータル))
+- [ ] **ユーザ作業**: Document Intelligence (F0) を `rg-mahted-dev` に作成 ([§8-3](./SETUP_AZURE.md#8-3-document-intelligence-リソース作成-azureポータル))
+- [ ] **ユーザ作業**: `backend/.env` を作成しキー情報を貼り付け ([§8-4](./SETUP_AZURE.md#8-4-エンドポイントキーの取得と-backendenv-への書き込み))
+- [ ] **ユーザ作業**: ローカル疎通確認 ([§8-5](./SETUP_AZURE.md#8-5-ローカルで疎通確認))
 - [ ] **ユーザ作業**: サンプル劣化請求書PDF (日英×2〜3 フォーマット) 5〜10枚を `samples/` に配置
 - [ ] **ユーザ作業**: ハッカソン特設 Discord に参加 (公式ページから招待リンク)
 - [ ] GitHubリモートリポジトリ作成 & `git push`
@@ -168,7 +175,7 @@ MAHTED/
 | `backend/app/tools/gpt4o_vision.py` | `pdf2image` は **poppler-utils** が必要 (Dockerfile で apt install 済)。ローカル macOS では `brew install poppler` |
 | `frontend/app/components/Uploader.tsx` | API URL は `process.env.NEXT_PUBLIC_API_URL` 経由。本番は Vercel の env で設定 |
 | `frontend/AGENTS.md` | **Next.js 16 は破壊的変更がある**旨の警告。新規 Next.js コードを書く前に `node_modules/next/dist/docs/01-app/` を読むこと |
-| `infra/main-resources.bicep` | GPT-4o のモデルバージョンは `2024-11-20`。`GlobalStandard` SKU + capacity 30。リージョン制約あり (`openAiLocation=eastus` デフォルト) |
+| `infra/main-resources.bicep` | **現在は使用していない参考資料** (旧型 Azure OpenAI 前提)。採用パスは Azure ポータルでの Foundry リソース手動作成。`azd up` を再採用する場合は `kind: 'OpenAI'` → `kind: 'AIServices'` 等への書き換えが必要 |
 
 ---
 
@@ -176,15 +183,15 @@ MAHTED/
 
 ### backend/.env (`backend/.env.example` をコピー)
 
-| 変数 | 取得方法 | 用途 |
+| 変数 | 取得方法 (ポータル手動パス) | 用途 |
 |---|---|---|
-| `DOCUMENT_INTELLIGENCE_ENDPOINT` | `azd env get-values` or Azureポータル → DI リソース → Keys and Endpoint | DI API ベース URL |
-| `DOCUMENT_INTELLIGENCE_KEY` | 同上 (Key1) | DI 認証 |
-| `AZURE_OPENAI_ENDPOINT` | `azd env get-values` or Azureポータル → OpenAI リソース → Keys and Endpoint | OpenAI API ベース URL |
-| `AZURE_OPENAI_API_KEY` | 同上 (Key1) | OpenAI 認証 |
-| `AZURE_OPENAI_API_VERSION` | デフォルト `2024-10-21` でOK | API バージョン |
-| `AZURE_OPENAI_GPT4O_DEPLOYMENT` | デフォルト `gpt-4o` (Bicep で作成済) | デプロイメント名 |
-| `AI_FOUNDRY_PROJECT_ENDPOINT` | Day 5〜6 で Foundry 使う場合のみ | Agent Service 用 |
+| `DOCUMENT_INTELLIGENCE_ENDPOINT` | Azureポータル → `mahted-di` → 「キーとエンドポイント」 → エンドポイント | DI API ベース URL |
+| `DOCUMENT_INTELLIGENCE_KEY` | 同上 → KEY 1 | DI 認証 |
+| `AZURE_OPENAI_ENDPOINT` | Azureポータル → `mahted-foundry` → 「キーとエンドポイント」 (`*.openai.azure.com` 形式を選ぶ) | OpenAI 互換 API ベース URL |
+| `AZURE_OPENAI_API_KEY` | 同上 → Key 1 | OpenAI 認証 |
+| `AZURE_OPENAI_API_VERSION` | `2024-10-21` で固定 | API バージョン |
+| `AZURE_OPENAI_GPT4O_DEPLOYMENT` | Foundry ポータルで作ったデプロイメント名 (`gpt-4o` 推奨) | デプロイメント名 |
+| `AI_FOUNDRY_PROJECT_ENDPOINT` | Day 5〜6 で Agent Service を使う場合のみ。Foundry ポータル → プロジェクトの概要 → エンドポイント | Agent Service 用 |
 | `AZURE_STORAGE_CONNECTION_STRING` | 任意 (PDF永続化する場合のみ) | Blob 接続 |
 | `CORS_ORIGINS` | ローカルは `http://localhost:3000`、本番は Vercel URL | CORS 許可元 |
 
@@ -241,12 +248,28 @@ python -c "from app.tools import document_intelligence as di; \
 
 ---
 
-## 6. Azure デプロイ手順 (azd up 一発)
+## 6. Azure リソース作成 — ポータル手動 (採用パス)
 
-> ⚠ **Azure をこれから初めて使う場合は、まず [docs/SETUP_AZURE.md](./SETUP_AZURE.md) を完了させてからこのセクションに戻ってきてください。** アカウント作成・CLI セットアップ・OpenAI 利用申請・予算アラートまでをカバーしています。
+> ⚠ 詳細は [docs/SETUP_AZURE.md セクション 8](./SETUP_AZURE.md#8-リソース作成--採用パス-ポータル手動) を参照。ここでは要点のみ。
+
+1. **Microsoft Foundry リソース作成** — Azure ポータルで `Foundry (おすすめ)` を選択。リージョン East US、リソースグループ `rg-mahted-dev`、名前 `mahted-foundry`、デフォルトプロジェクト `proj-default`
+2. **GPT-4o デプロイ** — Foundry ポータル ([ai.azure.com](https://ai.azure.com)) → 「モデル + エンドポイント」→ gpt-4o (2024-11-20, Global Standard, TPM 30K)
+3. **Document Intelligence (F0)** — Azure ポータルで別途作成、リージョンとリソースグループは Foundry と同じ
+4. **`backend/.env` 作成** — Foundry / DI の Endpoint と Key を貼る
+5. **疎通確認** — `python -c "from openai import AzureOpenAI; ..."` (詳細は SETUP_AZURE.md §8-5)
+
+### 旧パス (azd up) は当面使わない
+`infra/main-resources.bicep` は `kind: 'OpenAI'` (旧 Azure OpenAI) を作る前提で書かれており、現状の Foundry リソースと二重管理になります。`azd up` を使いたい場合は付録 A (SETUP_AZURE.md) を参照し、Bicep を `kind: 'AIServices'` 等へ書き換えてください。
+
+### Container Apps へのバックエンドデプロイは Day 9 で別途検討
+ポータル手動パスの場合、Container Apps Environment / Container App / ACR は手動で作るか、`infra/` の Bicep を Foundry 互換に修正してから利用します。当面は **ローカル `uvicorn` + Vercel フロント** で開発を進め、Day 9 に本番化を判断。
+
+---
+
+## 6.X (参考) `azd up` を使う場合の旧手順
 
 ```bash
-# 0. 前提: Azure無料アカウント作成済 + az/azd CLI ログイン済 (詳細: SETUP_AZURE.md)
+# 0. 前提: Azure無料アカウント作成済 + az/azd CLI ログイン済 (詳細: SETUP_AZURE.md 付録 A)
 az login
 azd auth login
 
