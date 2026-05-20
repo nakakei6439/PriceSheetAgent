@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+.env
+.env.local
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+.next/
+out/
+dist/
+build/
+.vercel
+.turbo
+*.log
+.DS_Store
+
+# Azure
+.azure/
+azure.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Samples (大きなPDFやスキャンデータはコミットしない判断もあり。一旦含める)
+# samples/*.pdf

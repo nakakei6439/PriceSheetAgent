@@ -1,0 +1,11 @@
+name: mahted
+metadata:
+  template: mahted@0.1.0
+services:
+  backend:
+    project: ./backend
+    language: python
+    host: containerapp
+    docker:
+      path: Dockerfile
+      context: .
