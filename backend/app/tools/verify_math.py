@@ -2,7 +2,7 @@
 
 Tool: verify_math
 - 各明細: quantity * unit_price ≈ amount
-- 明細合計: sum(amounts) ≈ invoice total
+- 明細合計: sum(amounts) ≈ document total
 - 許容誤差は割合 (rel) と最小絶対値 (abs_) で指定
 """
 from __future__ import annotations
@@ -67,7 +67,7 @@ def verify(
             subtotal,
             tax,
         ):
-            warnings.append(f"明細合計 {summed:.2f} ≠ 請求合計 {total:.2f}")
+            warnings.append(f"明細合計 {summed:.2f} ≠ 文書合計 {total:.2f}")
 
     passed = len(warnings) == 0
     elapsed = int((time.time() - started) * 1000)

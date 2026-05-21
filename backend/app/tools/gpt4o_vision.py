@@ -18,7 +18,8 @@ from app.settings import get_settings
 
 
 _SYSTEM = (
-    "あなたは多形式・多言語(日本語/英語)の請求書から商品明細を抽出する精密OCRアシスタントです。"
+    "あなたは多形式・多言語(日本語/英語)の価格通知書・仕切り価格通知書・価格表PDFから"
+    "商品コードと価格明細を抽出する精密OCRアシスタントです。"
     "画像はスキャン劣化している場合があります。読めない文字は '?' で表現してください。"
     "商品コードは英数字とハイフン/スラッシュのみ。価格は数値のみ(通貨記号やカンマは除外)。"
 )
@@ -83,7 +84,7 @@ def extract(pdf_bytes: bytes, hint: str | None = None) -> tuple[list[LineItem], 
     s = get_settings()
     data_urls = _pdf_to_data_urls(pdf_bytes)
 
-    user_text = "請求書の全明細を上記のJSONスキーマで抽出してください。"
+    user_text = "価格通知書・価格表PDFの全明細を上記のJSONスキーマで抽出してください。"
     if hint:
         user_text += f"\n特に次の点に注意: {hint}"
 
@@ -99,7 +100,7 @@ def extract(pdf_bytes: bytes, hint: str | None = None) -> tuple[list[LineItem], 
         ],
         response_format={
             "type": "json_schema",
-            "json_schema": {"name": "invoice_extraction", "schema": _SCHEMA, "strict": True},
+            "json_schema": {"name": "price_sheet_extraction", "schema": _SCHEMA, "strict": True},
         },
         temperature=0.0,
     )

@@ -86,7 +86,7 @@ export function Uploader() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${result.meta.invoice_id ?? "invoice"}.csv`;
+    a.download = `${result.meta.invoice_id ?? "price-sheet"}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }

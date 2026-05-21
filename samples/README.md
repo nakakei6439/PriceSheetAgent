@@ -1,4 +1,4 @@
-# samples/ — テスト用請求書 PDF 置き場
+# samples/ — テスト用価格表 PDF 置き場
 
 ハッカソンのデモと開発検証で使う PDF をここに集めます。**`samples/` は git に含めても OK** (機密データではないため)。
 
@@ -6,11 +6,11 @@
 
 | ファイル名 | 内容 | 用途 |
 |---|---|---|
-| `ja_invoice_a_clean.pdf` | `templates/ja_invoice_a.html` をブラウザでそのまま PDF 化したもの | Digital PDF のベースライン (DI が完璧に読める想定) |
+| `ja_invoice_a_clean.pdf` | `templates/ja_invoice_a.html` をブラウザでそのまま PDF 化したもの | Digital PDF のベースライン (DI が読める想定) |
 | `ja_invoice_a_degraded.pdf` | 上記を **紙印刷 → スマホ撮影 or スキャン → PDF 化** | **本プロジェクトの核**。劣化スキャン |
 | `ja_invoice_b_clean.pdf` | `templates/ja_invoice_b.html` を PDF 化 | フォーマット違い (縦書き/明朝/軽減税率) |
-| `ja_invoice_b_degraded.pdf` | 上記の紙経由 | 複雑日本語請求書の劣化版 |
-| `en_invoice_a_clean.pdf` | `templates/en_invoice_a.html` を PDF 化 | 英文請求書 (Northwind) |
+| `ja_invoice_b_degraded.pdf` | 上記の紙経由 | 複雑日本語価格表の劣化版 |
+| `en_invoice_a_clean.pdf` | `templates/en_invoice_a.html` を PDF 化 | 英文価格表 (Northwind) |
 | `en_invoice_a_degraded.pdf` | 上記の紙経由 | 英文劣化スキャン |
 | `en_invoice_b_clean.pdf` | `templates/en_invoice_b.html` を PDF 化 | 英文+欧州VAT (Contoso Pharma) |
 | `en_invoice_b_degraded.pdf` | 上記の紙経由 | 多通貨/多税率の劣化 |
@@ -65,8 +65,8 @@ DI の `confidence` が低ければ自動で GPT-4o Vision が呼ばれ、`trace
 
 | テンプレ | 言語 | 売り | 含まれる難所 |
 |---|---|---|---|
-| `ja_invoice_a.html` | 日本語 (ゴシック) | テクノロジー商事 | 印影 (赤丸スタンプ)、登録番号、和暦無し |
-| `ja_invoice_b.html` | 日本語 (明朝) | みどり物産 | **軽減税率 8% / 10% 混在**、和暦 (令和)、適格請求書、マイナス値引行 |
+| `ja_invoice_a.html` | 日本語 (ゴシック) | テクノロジー商事 | 商品コード、単価、金額、印影、登録番号 |
+| `ja_invoice_b.html` | 日本語 (明朝) | みどり物産 | **軽減税率 8% / 10% 混在**、和暦 (令和)、マイナス値引行 |
 | `en_invoice_a.html` | 英語 | Northwind Components | USD、Net 30、Discount 行 |
 | `en_invoice_b.html` | 英語 (一部独語) | Contoso Pharma EU | **EUR**、複数 VAT 率 (0/7/19%)、Lot 番号、PAID スタンプ |
 

@@ -7,7 +7,7 @@ export function ResultTable({ result }: { result: ExtractionResult }) {
       <h2 className="text-lg font-semibold">抽出結果</h2>
       <dl className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-sm md:grid-cols-4">
         <Meta label="ベンダー" value={meta.vendor_name} />
-        <Meta label="請求書番号" value={meta.invoice_id} />
+        <Meta label="文書番号" value={meta.invoice_id} />
         <Meta label="日付" value={meta.invoice_date} />
         <Meta label="合計" value={meta.total !== null ? `${meta.total} ${meta.currency ?? ""}` : null} />
       </dl>

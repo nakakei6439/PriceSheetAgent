@@ -32,7 +32,7 @@ This repository follows the [agents.md](https://agents.md/) convention. Any AI c
 ## Handoff prompt for new sessions
 
 ```
-このリポジトリは Microsoft Agent Hackathon 2026 への応募作品 MAHTED です。
+このリポジトリは Microsoft Agent Hackathon 2026 への応募作品 PriceSheetAgent です。
 まず docs/HANDOFF.md を読んでから作業を始めてください。
 次のタスク: [ここに具体を書く]
 ```

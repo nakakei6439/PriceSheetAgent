@@ -6,7 +6,7 @@ from app.models import ExtractionResult
 from app.settings import get_settings
 
 
-app = FastAPI(title="MAHTED Invoice Extraction Agent")
+app = FastAPI(title="PriceSheetAgent Price Sheet Extraction Agent")
 settings = get_settings()
 
 app.add_middleware(

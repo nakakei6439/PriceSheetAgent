@@ -39,7 +39,7 @@
 
 ---
 
-## 1. 現状ステータス (Last updated: 2026-05-21, ファイルレビューUI + 小型エージェントログまで完了)
+## 1. 現状ステータス (Last updated: 2026-05-21, PriceSheetAgent 表記同期まで完了)
 
 ### 採用したデプロイ方針
 **Azure ポータルから手動でリソースを作成する** (Foundry 中心) パスを採用。`azd up` (Bicep) は付録扱い。理由は `docs/SETUP_AZURE.md` セクション 8 冒頭を参照。
@@ -64,17 +64,18 @@
 | **`pytest tests/` (verify_math)** | ✅ 5件 PASS | `backend/tests/test_verify_math.py` |
 | **Azure OpenAI 疎通テスト** | ✅ | gpt-4o → "pong" 受信 |
 | **Document Intelligence リソース作成** | ✅ | `mahted-di` (F0, East US) — `https://mahted-di.cognitiveservices.azure.com/` |
-| **DI 疎通テスト (公開サンプル)** | ✅ | CONTOSO LTD 請求書を prebuilt-invoice で正しく抽出 |
-| **HTML 請求書テンプレ作成** | ✅ | `samples/templates/{ja_invoice_a,ja_invoice_b,en_invoice_a,en_invoice_b}.html` |
+| **DI 疎通テスト (公開サンプル)** | ✅ | CONTOSO LTD サンプル帳票を prebuilt-invoice で正しく抽出 |
+| **HTML 価格表テンプレ作成** | ✅ | `samples/templates/{ja_invoice_a,ja_invoice_b,en_invoice_a,en_invoice_b}.html` |
 | **clean PDF 自動生成** | ✅ | 上記4テンプレを Chrome headless で `samples/*_clean.pdf` に変換 (300KB〜1.4MB) |
 | **DI による clean PDF 抽出検証** | ✅ | JA: vendor `テクノロジー商事株式会社`, 6明細, conf 0.88 / EN: vendor `NORTHWIND COMPONENTS, INC.`, 6明細, conf 0.94 |
 | **エージェント E2E 動作確認 (clean PDF)** | ✅ | DI → verify_math失敗 (税問題) → **GPT-4o Vision にフォールバック** → trace記録 → ExtractionResult を返す、まで動作 |
 | **税考慮検算 + 商品コード正規化** | ✅ | `InvoiceMeta.subtotal/tax` 追加、DI の `SubTotal`/`TotalTax` 取得、税相当差分の許容、商品コード改行/空白除去 |
 | **degraded PDF サンプル追加** | ✅ | `samples/{ja_invoice_a,ja_invoice_b,en_invoice_a,en_invoice_b}_degraded.pdf` (各1ページ, 764KB〜900KB) |
-| **ファイルレビューUI + JSON出力UI** | ✅ | アップロードファイルのPDF/画像プレビュー、小型エージェントログ、JSONプレビュー、JSONダウンロードを追加 |
-| **ローカル静的検証** | ✅ | `pytest backend/tests/ -v` 5件 PASS / `cd frontend && npx tsc --noEmit` PASS |
+| **ファイルレビューUI + JSON出力UI** | ✅ | アップロードファイルのPDF/画像プレビュー、小型エージェントログ、JSONプレビュー、JSONコピー/JSONダウンロードを追加 |
+| **PriceSheetAgent 表記同期** | ✅ | 公開名・メタデータ・README・引き継ぎ文言を価格通知書/価格表PDF向けに更新 |
+| **ローカル静的検証** | ✅ | `pytest backend/tests/ -v` 5件 PASS / `cd frontend && npx tsc --noEmit` PASS / `npm run build` PASS |
 | GitHub リモート作成・初回 push | ✅ | `origin` → `https://github.com/nakakei6439/PriceSheetAgent.git` |
-| 初回コミット〜直近 | ✅ | local commits `dbdb718`, `a88a8e6`, `be86d70`, `5df2034`, `afb17bf`, `5c3a086`, `87f62e6`, `267dfa9` |
+| 初回コミット〜直近 | ✅ | `main` は `origin/main` に push 済み |
 
 ### 既知の改善余地 / 未完了
 
@@ -135,7 +136,7 @@ Day 3〜4 で行う作業の入口候補:
 └───────────────────────────────────────────────────────────┘
    │
    ▼ ExtractionResult(meta, line_items, trace, warnings)
-[Next.js: AgentTrace + ResultTable + CSVダウンロード]
+[Next.js: ファイルレビュー + ResultTable + AgentTrace + JSON/CSV 出力]
 ```
 
 **設計意図**:
@@ -149,7 +150,7 @@ Day 3〜4 で行う作業の入口候補:
 ## 3. ディレクトリと主要ファイル
 
 ```
-MAHTED/
+PriceSheetAgent/
 ├── README.md
 ├── azure.yaml                 # azd 設定 (services.backend → ./backend)
 ├── .gitignore
@@ -189,7 +190,7 @@ MAHTED/
 │   ├── main-resources.bicep   # DI / OpenAI / Storage / Log / CAE / ACR / Container App
 │   └── main.parameters.json
 │
-├── samples/                   # ⚠ 未配置。ユーザ作業で日英×2〜3形式の劣化PDFを用意
+├── samples/                   # 日英×clean/degraded の価格表サンプルPDF
 │
 └── docs/
     ├── HANDOFF.md             # ← 本ファイル
@@ -267,14 +268,14 @@ npm run dev
 ```bash
 cd backend
 pytest tests/ -v
-# verify_math のユニットテストが3件パスする想定
+# verify_math のユニットテストが5件パスする想定
 ```
 
 ### 単発ツール検証 (サンプルPDF配置後)
 ```bash
 cd backend && source .venv/bin/activate
 python -c "from app.tools import document_intelligence as di; \
-  meta, items, trace = di.extract(open('../samples/ja_invoice_degraded.pdf','rb').read()); \
+  meta, items, trace = di.extract(open('../samples/ja_invoice_a_degraded.pdf','rb').read()); \
   print(meta, len(items), trace)"
 ```
 
@@ -390,8 +391,8 @@ cd frontend && npx vercel
 ### 起動プロンプト (コピペ用 / 2026-05-21 時点)
 
 ```
-このプロジェクトは Microsoft Agent Hackathon 2026 への応募作品 "MAHTED" です。
-劣化スキャンPDF (Excel→PDF→印刷→スキャン→PDF) の請求書から商品コード・品名・
+このプロジェクトは Microsoft Agent Hackathon 2026 への応募作品 "PriceSheetAgent" です。
+劣化スキャンPDF (Excel→PDF→印刷→スキャン→PDF) の価格通知書・仕切り価格通知書・価格表から商品コード・品名・
 数量・単価・金額を、Azure エージェントが自己検証ループで抽出する Web アプリです。
 
 まず以下を順に読んでください:
@@ -403,17 +404,18 @@ cd frontend && npx vercel
 - Azure リソース全て構築済み (Foundry / GPT-4o / DI)
 - Python venv + 依存インストール済み (.venv/ は 3.12)
 - backend/.env はローカルに存在 (.gitignore 済み)
-- ユニットテスト 3件 PASS
+- ユニットテスト 5件 PASS
 - Azure OpenAI / Document Intelligence 両方疎通済み
 - clean PDF を Chrome headless で生成済み (samples/*_clean.pdf)
-- agent.run() の E2E 動作も確認済み (DI → 検算失敗 → GPT-4o Vision フォールバック)
+- degraded PDF 4件を samples/ に追加済み
+- ファイルレビュー、JSONプレビュー、JSONコピー/ダウンロードUIを実装済み
+- agent.run() の clean PDF E2E 動作も確認済み (DI → 検算失敗 → GPT-4o Vision フォールバック)
 
 次に取り組むタスク (どれか選ぶか、ユーザに聞く):
-A. verify_math.py を税考慮版に強化
-B. samples/*_degraded.pdf (ユーザが紙経由で作成済みの場合) で E2E 確認
-C. FastAPI を起動して /extract をフロントから叩く動作確認
-D. agent.py 中の商品コード `\n` 除去などのクレンジング追加
-E. Day 5〜6 の Foundry Agent Service への置き換え
+A. samples/*_degraded.pdf で E2E 確認
+B. FastAPI を起動して /extract をフロントから叩く動作確認
+C. サンプルPDFのワンクリック試用ボタン追加
+D. Day 5〜6 の Foundry Agent Service への置き換え
 
 制約:
 - 締切 2026-06-01 23:59 JST (要・残り日数確認)
@@ -426,13 +428,12 @@ E. Day 5〜6 の Foundry Agent Service への置き換え
 
 ### 直前の対話で残した宿題 (Codex がここから再開する場合)
 
-`agent.run()` を `ja_invoice_a_clean.pdf` に対して回したところ、以下が観測された:
-- DI confidence 0.88 (フォールバック閾値 0.6 を超えており、信頼度起因では Vision 呼ばれない)
-- ただし verify_math が **明細合計 1,099,200 ≠ 請求合計 1,209,120** で警告
-- これは「明細は税抜・合計は税込」という普通の請求書では避けられない誤検知
-- 警告を契機に Vision が呼ばれ、re-extract したものの同じ数字が返り、警告は残ったまま
+`samples/*_degraded.pdf` は追加済みだが、Codex 実行環境では `mahted-di.cognitiveservices.azure.com` の DNS 解決に失敗し、Azure DI 呼び出しが止まった。ユーザの通常ターミナルなど外部ネットワークが通る環境で以下を再実行する:
 
-→ 改善優先度の高いコードは `backend/app/tools/verify_math.py` の検算ロジック。`InvoiceMeta` に subtotal/tax を持たせる対応もセット。
+```bash
+cd backend && source .venv/bin/activate
+python -c "from app.agent import run; import json; result = run(open('../samples/ja_invoice_a_degraded.pdf','rb').read()); print(json.dumps(result.model_dump(), ensure_ascii=False, indent=2))"
+```
 
 ### Codex CLI に最適化したいなら
 - リポジトリルートに `AGENTS.md` を作成し、内容を本ファイルへの参照 (`@docs/HANDOFF.md`) にする (Codex CLI は AGENTS.md を自動読み込み)

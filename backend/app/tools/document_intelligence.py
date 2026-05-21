@@ -3,6 +3,9 @@
 Tool: extract_with_document_intelligence
 - 入力: PDF/画像のバイナリ
 - 出力: InvoiceMeta + LineItem[] + 各セルの confidence
+
+価格通知書・仕切り価格通知書・価格表PDFにも、商品明細テーブル抽出の初手として
+prebuilt-invoice を利用する。
 """
 from __future__ import annotations
 

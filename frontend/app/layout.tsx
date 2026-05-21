@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MAHTED — 請求書抽出エージェント",
-  description: "Excel→PDF→印刷→スキャン と劣化したPDFから商品コードと価格を抽出するAzureエージェント",
+  title: "PriceSheetAgent — 価格通知書読取エージェント",
+  description: "Excel→PDF→印刷→スキャン と劣化した価格通知書・価格表PDFから商品コードと価格を抽出するAzureエージェント",
 };
 
 export default function RootLayout({
