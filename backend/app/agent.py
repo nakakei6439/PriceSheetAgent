@@ -12,6 +12,8 @@
 """
 from __future__ import annotations
 
+import re
+
 from app.models import ExtractionResult, LineItem, TraceStep
 from app.tools import document_intelligence as di
 from app.tools import gpt4o_vision as vision
@@ -21,21 +23,35 @@ from app.tools import verify_math
 CONFIDENCE_FLOOR = 0.6
 
 
+def _normalize_product_code(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalized = re.sub(r"\s+", "", value)
+    return normalized or None
+
+
+def _normalize_items(items: list[LineItem]) -> list[LineItem]:
+    return [
+        LineItem(**{**item.model_dump(), "product_code": _normalize_product_code(item.product_code)})
+        for item in items
+    ]
+
+
 def _merge(di_items: list[LineItem], vis_items: list[LineItem]) -> list[LineItem]:
     """信頼度の高い方を優先して同件数マージ. 件数差がある場合は長い方を採用."""
     if not di_items:
-        return vis_items
+        return _normalize_items(vis_items)
     if not vis_items:
-        return di_items
+        return _normalize_items(di_items)
     if len(di_items) != len(vis_items):
         longer = di_items if len(di_items) >= len(vis_items) else vis_items
-        return [LineItem(**{**i.model_dump(), "source": "merged"}) for i in longer]
+        return _normalize_items([LineItem(**{**i.model_dump(), "source": "merged"}) for i in longer])
 
     merged: list[LineItem] = []
     for a, b in zip(di_items, vis_items):
         pick = a if a.confidence >= b.confidence else b
         merged.append(LineItem(**{**pick.model_dump(), "source": "merged"}))
-    return merged
+    return _normalize_items(merged)
 
 
 def run(pdf_bytes: bytes) -> ExtractionResult:
@@ -45,7 +61,7 @@ def run(pdf_bytes: bytes) -> ExtractionResult:
     trace.append(di_step)
 
     avg_conf = (sum(i.confidence for i in di_items) / len(di_items)) if di_items else 0.0
-    items: list[LineItem] = di_items
+    items: list[LineItem] = _normalize_items(di_items)
 
     if not di_items or avg_conf < CONFIDENCE_FLOOR:
         hint = (

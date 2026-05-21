@@ -25,3 +25,17 @@ def test_total_mismatch_warns():
     passed, warnings, _ = verify(items, total=999)
     assert not passed
     assert any("請求合計" in w for w in warnings)
+
+
+def test_tax_exclusive_lines_with_tax_in_total_passes():
+    items = [_li(2, 100, 200), _li(3, 50, 150)]
+    passed, warnings, _ = verify(items, total=385, subtotal=350, tax=35)
+    assert passed
+    assert warnings == []
+
+
+def test_tax_like_difference_passes_without_structured_tax():
+    items = [_li(2, 100, 200), _li(3, 50, 150)]
+    passed, warnings, _ = verify(items, total=385)
+    assert passed
+    assert warnings == []

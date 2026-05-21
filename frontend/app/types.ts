@@ -13,6 +13,8 @@ export type InvoiceMeta = {
   vendor_name: string | null;
   invoice_id: string | null;
   invoice_date: string | null;
+  subtotal: number | null;
+  tax: number | null;
   total: number | null;
   currency: string | null;
   language: "ja" | "en" | "mixed" | "unknown";

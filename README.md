@@ -1,8 +1,8 @@
-# MAHTED — Multi-format / multilingual invoice extraction Agent
+# PriceSheetAgent — Multi-format price sheet extraction Agent
 
 Microsoft Agent Hackathon 2026 応募作品。
 
-Excel → PDF → 紙印刷 → スキャン → PDF と"参照リレー"を経て劣化した請求書から、商品コード・品名・数量・単価・金額を Azure エージェントが自己検証ループで抽出する Web アプリ。
+Excel → PDF → 紙印刷 → スキャン → PDF と"参照リレー"を経て劣化した価格通知書・仕切り価格通知書・価格表 PDF から、商品コード・品名・数量・単価・金額を Azure エージェントが自己検証ループで抽出する Web アプリ。
 
 ## アーキテクチャ
 
@@ -65,6 +65,6 @@ npm run dev
 ## 提出物
 
 - 公開URL: TBD (Vercel)
-- GitHub: TBD
+- GitHub: https://github.com/nakakei6439/PriceSheetAgent
 - Zenn 記事: `docs/zenn_article.md`
 - デモ動画: TBD

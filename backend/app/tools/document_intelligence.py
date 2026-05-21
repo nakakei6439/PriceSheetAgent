@@ -7,12 +7,20 @@ Tool: extract_with_document_intelligence
 from __future__ import annotations
 
 import time
+import re
 from azure.ai.documentintelligence import DocumentIntelligenceClient
 from azure.ai.documentintelligence.models import AnalyzeDocumentRequest
 from azure.core.credentials import AzureKeyCredential
 
 from app.models import InvoiceMeta, LineItem, TraceStep
 from app.settings import get_settings
+
+
+def _normalize_product_code(value: object | None) -> str | None:
+    if value is None:
+        return None
+    normalized = re.sub(r"\s+", "", str(value))
+    return normalized or None
 
 
 def _client() -> DocumentIntelligenceClient:
@@ -56,11 +64,15 @@ def extract(pdf_bytes: bytes) -> tuple[InvoiceMeta, list[LineItem], TraceStep]:
         vendor, _ = _field_value(f.get("VendorName"))
         invoice_id, _ = _field_value(f.get("InvoiceId"))
         invoice_date, _ = _field_value(f.get("InvoiceDate"))
+        subtotal, _ = _field_value(f.get("SubTotal"))
+        tax, _ = _field_value(f.get("TotalTax"))
         total, _ = _field_value(f.get("InvoiceTotal"))
         meta = InvoiceMeta(
             vendor_name=str(vendor) if vendor else None,
             invoice_id=str(invoice_id) if invoice_id else None,
             invoice_date=str(invoice_date) if invoice_date else None,
+            subtotal=float(subtotal) if isinstance(subtotal, (int, float)) else None,
+            tax=float(tax) if isinstance(tax, (int, float)) else None,
             total=float(total) if isinstance(total, (int, float)) else None,
         )
 
@@ -79,7 +91,7 @@ def extract(pdf_bytes: bytes) -> tuple[InvoiceMeta, list[LineItem], TraceStep]:
 
                 items.append(
                     LineItem(
-                        product_code=str(code) if code else None,
+                        product_code=_normalize_product_code(code),
                         description=str(desc) if desc else None,
                         quantity=float(qty) if isinstance(qty, (int, float)) else None,
                         unit_price=float(unit) if isinstance(unit, (int, float)) else None,

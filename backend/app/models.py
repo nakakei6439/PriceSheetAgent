@@ -17,6 +17,8 @@ class InvoiceMeta(BaseModel):
     vendor_name: str | None = None
     invoice_id: str | None = None
     invoice_date: str | None = None
+    subtotal: float | None = None
+    tax: float | None = None
     total: float | None = None
     currency: str | None = None
     language: Literal["ja", "en", "mixed", "unknown"] = "unknown"

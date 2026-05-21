@@ -8,7 +8,7 @@
 
 ## 0. プロジェクト一行サマリ
 
-**MAHTED** — Excel→PDF→紙印刷→スキャン と"参照リレー"を経て劣化した請求書 (日英混在・多フォーマット) から、商品コード/品名/数量/単価/金額を **Azureエージェントが自己検証ループで抽出する Web アプリ**。Microsoft Agent Hackathon 2026 (個人部門) 応募作品。
+**PriceSheetAgent** — Excel→PDF→紙印刷→スキャン と"参照リレー"を経て劣化した価格通知書・仕切り価格通知書・価格表 PDF (日英混在・多フォーマット) から、商品コード/品名/数量/単価/金額を **Azureエージェントが自己検証ループで抽出する Web アプリ**。Microsoft Agent Hackathon 2026 (個人部門) 応募作品。
 
 ### ハッカソン要件
 - **応募締切**: 2026-06-01 (月) 23:59 ← **クリティカル**
@@ -39,7 +39,7 @@
 
 ---
 
-## 1. 現状ステータス (Last updated: 2026-05-21, E2E 動作確認 (clean PDF) まで完了)
+## 1. 現状ステータス (Last updated: 2026-05-21, 税考慮検算 + 商品コード正規化まで完了)
 
 ### 採用したデプロイ方針
 **Azure ポータルから手動でリソースを作成する** (Foundry 中心) パスを採用。`azd up` (Bicep) は付録扱い。理由は `docs/SETUP_AZURE.md` セクション 8 冒頭を参照。
@@ -69,13 +69,14 @@
 | **clean PDF 自動生成** | ✅ | 上記4テンプレを Chrome headless で `samples/*_clean.pdf` に変換 (300KB〜1.4MB) |
 | **DI による clean PDF 抽出検証** | ✅ | JA: vendor `テクノロジー商事株式会社`, 6明細, conf 0.88 / EN: vendor `NORTHWIND COMPONENTS, INC.`, 6明細, conf 0.94 |
 | **エージェント E2E 動作確認 (clean PDF)** | ✅ | DI → verify_math失敗 (税問題) → **GPT-4o Vision にフォールバック** → trace記録 → ExtractionResult を返す、まで動作 |
-| 初回コミット〜直近 | ✅ | local commits `dbdb718`, `a88a8e6`, `be86d70`, `5df2034`, `afb17bf`, `(samples templates)` (リモート未push) |
+| **税考慮検算 + 商品コード正規化** | ✅ | `InvoiceMeta.subtotal/tax` 追加、DI の `SubTotal`/`TotalTax` 取得、税相当差分の許容、商品コード改行/空白除去 |
+| GitHub リモート作成・初回 push | ✅ | `origin` → `https://github.com/nakakei6439/PriceSheetAgent.git` |
+| 初回コミット〜直近 | ✅ | local commits `dbdb718`, `a88a8e6`, `be86d70`, `5df2034`, `afb17bf`, `5c3a086`, `87f62e6` |
 
 ### 既知の改善余地 / 未完了
 
 **コード側 (Day 3〜4 で対応推奨)**
-- [ ] `backend/app/tools/verify_math.py` を **税考慮版に強化** — 現状は「明細合計 ≒ 請求合計」を素朴に比較しているため、税抜明細+税込合計の通常の請求書で必ず警告が出る。`InvoiceMeta` に subtotal/tax/total を持たせる or 「総額の 1〜15% 以内の差なら税相当として許容」というヒューリスティック追加が候補
-- [ ] `backend/app/tools/document_intelligence.py` で抽出された商品コードに `\n` (改行) が混入することがある (例: `'TC-A001-\n100'`)。後段で `.replace("\n", "")` クレンジング推奨
+- [ ] degraded PDF で、DI 信頼度低下 → GPT-4o Vision フォールバック → 検算通過/警告表示の実挙動を確認
 
 **ユーザ作業 (今すぐできる)**
 - [ ] `samples/*_clean.pdf` を **紙印刷 → スキャン/スマホ撮影 → PDF化** → `samples/*_degraded.pdf` を作成 (本プロジェクトの核となる劣化PDF。最低 `ja_invoice_a_degraded.pdf` 1枚)
@@ -90,11 +91,9 @@
 > **Day 1〜2: 環境構築 (完了) → Day 3〜4: バックエンド・コアパイプ (ここに入った)**
 
 Day 3〜4 で行う作業の入口候補:
-1. `verify_math` 強化 (税対応)
-2. degraded PDF で DI 信頼度低下 → GPT-4o Vision フォールバックの実発火確認
-3. FastAPI `/extract` を実 PDF で叩く + フロントから接続テスト
-4. プロダクトコードの改行除去・正規化
-- [ ] GitHubリモートリポジトリ作成 & `git push`
+1. degraded PDF で DI 信頼度低下 → GPT-4o Vision フォールバックの実発火確認
+2. FastAPI `/extract` を実 PDF で叩く + フロントから接続テスト
+- [x] GitHubリモートリポジトリ作成 & `git push`
 - [ ] `azd up` 実行 → 出力値を `backend/.env` に貼り付け
 - [ ] バックエンドのローカル動作確認 (`uvicorn`)
 - [ ] フロントのローカル動作確認 (`npm run dev`)
