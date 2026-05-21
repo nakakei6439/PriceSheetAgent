@@ -6,7 +6,8 @@ This repository follows the [agents.md](https://agents.md/) convention. Any AI c
 
 - **Project**: MAHTED — Azure agent that extracts product codes and prices from multi-format / Japanese-English invoices, including degraded scans (Excel → PDF → printed → scanned → PDF).
 - **Submission**: Microsoft Agent Hackathon 2026 (individual track), deadline **2026-06-01 23:59 JST**.
-- **Stack**: Python 3.12 + FastAPI (backend) · Next.js 16 + Tailwind v4 (frontend) · Azure Document Intelligence + Azure OpenAI GPT-4o · Bicep + `azd` (infra).
+- **Stack**: Python 3.12 + FastAPI (backend) · Next.js 16 + Tailwind v4 (frontend) · Azure Document Intelligence + Microsoft Foundry / Azure OpenAI GPT-4o.
+- **Current state**: Day 1〜2 complete — Azure resources provisioned (portal manual path), Python venv ready, all SDK connectivity verified, `agent.run()` end-to-end working on clean PDFs. About to start Day 3〜4 (backend tuning + degraded PDF tests).
 
 ## Before you start
 
