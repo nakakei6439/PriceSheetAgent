@@ -51,7 +51,7 @@
 - BE イメージは **GitHub Actions でビルド → ACR (`ca634368e688acr`) へ push** (`.github/workflows/build-backend.yml`)。
   理由: `az acr build` (ACR Tasks) が当サブスクリプションで `TasksOperationsNotAllowed` で禁止 + ローカル docker 無し。
 - Container App は ACR の `mahted-backend:latest` を pull。Azure キー類は **Container App のシークレット/環境変数**に投入
-  (`AZURE_OPENAI_API_KEY`/`DOCUMENT_INTELLIGENCE_KEY` は secretref)。`min-replicas=1` でコールドスタート回避。
+  (`AZURE_OPENAI_API_KEY`/`DOCUMENT_INTELLIGENCE_KEY` は secretref)。**`min-replicas=0` (scale-to-zero) — デモ期間だけ起動・無負荷時は課金停止**。初回リクエストはコールドスタート 5〜10秒。デモ直前に `/health` を叩いて warmup 推奨。常時起動に戻すなら `az containerapp update -n mahted-backend -g rg-mahted-dev --min-replicas 1`。
 - CORS は `CORS_ORIGINS` env に Vercel の本番エイリアス群を設定済み。FE は build 時 `NEXT_PUBLIC_API_URL` に BE FQDN を inline
   (Vercel プロジェクト env の Production に永続化済み)。
 - 本番 E2E 済み: `POST /extract` に `ja_invoice_a_degraded_heavy.pdf` → HTTP 200、trace 4ステップ
