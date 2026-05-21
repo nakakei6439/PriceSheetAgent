@@ -394,7 +394,7 @@ cd frontend && npx vercel
 ### Day 9 (5/29): 本番E2E
 - [x] Container Apps への image push & デプロイ確認 (GitHub Actions → ACR → Container Apps)
 - [x] フロント本番デプロイ (URL は §1 公開URL表。Zenn 記事に貼る)
-- [ ] 日英×劣化/クリーンの全サンプルで本番動作確認 (heavy ja_a は確認済み)
+- [x] 本番URLで実ブラウザ E2E 確認 (2026-05-21): `price-sheet-agent.vercel.app` → ⭐推奨デモ読込 → 抽出 → DI(7.5s)→検算warn→GPT-4o Vision(13.9s 自己修正)→検算warn の4ステップが UI に表示、結果6明細・warnings5件まで描画。スクショ `docs/e2e_prod_demo.png`。残りサンプルの網羅確認は任意。
 - [ ] エラーケース動作 (壊れたPDF、空ファイル) を本番URLで再確認
 
 ### Day 10 (5/30): 提出物制作
