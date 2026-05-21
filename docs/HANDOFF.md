@@ -39,7 +39,7 @@
 
 ---
 
-## 1. 現状ステータス (Last updated: 2026-05-21)
+## 1. 現状ステータス (Last updated: 2026-05-21, GPT-4o デプロイ完了時点)
 
 ### 採用したデプロイ方針
 **Azure ポータルから手動でリソースを作成する** (Foundry 中心) パスを採用。`azd up` (Bicep) は付録扱い。理由は `docs/SETUP_AZURE.md` セクション 8 冒頭を参照。
@@ -58,15 +58,17 @@
 | Azure Bicep (代替パス用・参考) | ✅ | `infra/main.bicep`, `infra/main-resources.bicep` (※Foundry 対応には書き換えが必要) |
 | Azure 無料アカウント作成 | ✅ | (ユーザ作業) |
 | **Microsoft Foundry リソース作成** | ✅ | East US / `rg-mahted-dev` / `mahted-foundry` (`proj-default`) |
-| 初回コミット | ✅ | local commit `dbdb718`, `a88a8e6`, `be86d70` (リモート未push) |
+| **GPT-4o デプロイ** | ✅ | デプロイ名 `gpt-4o` / 2024-11-20 / **Standard** / **TPM 50K, RPM 300** / 子リソース `nakak-mpeo8drm-eastus2` (East US 2) 経由 |
+| **`backend/.env` 作成 + Azure OpenAI キー設定** | ✅ | キーは `.gitignore` 済みなのでローカルのみ存在 |
+| 初回コミット | ✅ | local commit `dbdb718`, `a88a8e6`, `be86d70`, `5df2034` (リモート未push) |
 
 ### 未完了 / TODO
-- [ ] **ユーザ作業**: Foundry ポータルで `gpt-4o` (2024-11-20, Global Standard, TPM 30K) をデプロイ ([SETUP_AZURE.md §8-2](./SETUP_AZURE.md#8-2-gpt-4o-モデルのデプロイ-foundry-ポータル))
 - [ ] **ユーザ作業**: Document Intelligence (F0) を `rg-mahted-dev` に作成 ([§8-3](./SETUP_AZURE.md#8-3-document-intelligence-リソース作成-azureポータル))
-- [ ] **ユーザ作業**: `backend/.env` を作成しキー情報を貼り付け ([§8-4](./SETUP_AZURE.md#8-4-エンドポイントキーの取得と-backendenv-への書き込み))
+- [ ] **ユーザ作業**: 上記の `DOCUMENT_INTELLIGENCE_ENDPOINT` / `DOCUMENT_INTELLIGENCE_KEY` を `backend/.env` に貼り付け
 - [ ] **ユーザ作業**: ローカル疎通確認 ([§8-5](./SETUP_AZURE.md#8-5-ローカルで疎通確認))
 - [ ] **ユーザ作業**: サンプル劣化請求書PDF (日英×2〜3 フォーマット) 5〜10枚を `samples/` に配置
 - [ ] **ユーザ作業**: ハッカソン特設 Discord に参加 (公式ページから招待リンク)
+- [ ] ハッカソン後: Azure OpenAI キーをローテート (画面共有時に部分露出)
 - [ ] GitHubリモートリポジトリ作成 & `git push`
 - [ ] `azd up` 実行 → 出力値を `backend/.env` に貼り付け
 - [ ] バックエンドのローカル動作確認 (`uvicorn`)
@@ -183,13 +185,15 @@ MAHTED/
 
 ### backend/.env (`backend/.env.example` をコピー)
 
+⚠ 注意: `AZURE_OPENAI_*` は **Foundry リソース本体 (`mahted-foundry`) ではなく、モデルデプロイ時に Azure が自動作成した "接続リソース" (`<ユーザ名>-<ランダム>-eastus2` のような名前) から取得** します。Foundry を介してデプロイしても、実際にモデルをホストしているのは子リソース側です。
+
 | 変数 | 取得方法 (ポータル手動パス) | 用途 |
 |---|---|---|
 | `DOCUMENT_INTELLIGENCE_ENDPOINT` | Azureポータル → `mahted-di` → 「キーとエンドポイント」 → エンドポイント | DI API ベース URL |
 | `DOCUMENT_INTELLIGENCE_KEY` | 同上 → KEY 1 | DI 認証 |
-| `AZURE_OPENAI_ENDPOINT` | Azureポータル → `mahted-foundry` → 「キーとエンドポイント」 (`*.openai.azure.com` 形式を選ぶ) | OpenAI 互換 API ベース URL |
+| `AZURE_OPENAI_ENDPOINT` | Azureポータル → **接続リソース** (`*-eastus2` 等) → 「キーとエンドポイント」のエンドポイントを **ベース部分のみ** 抜き出して使用 | OpenAI 互換 API ベース URL |
 | `AZURE_OPENAI_API_KEY` | 同上 → Key 1 | OpenAI 認証 |
-| `AZURE_OPENAI_API_VERSION` | `2024-10-21` で固定 | API バージョン |
+| `AZURE_OPENAI_API_VERSION` | `2024-10-21` で固定 (新機能を試したい場合のみ `2025-01-01-preview`) | API バージョン |
 | `AZURE_OPENAI_GPT4O_DEPLOYMENT` | Foundry ポータルで作ったデプロイメント名 (`gpt-4o` 推奨) | デプロイメント名 |
 | `AI_FOUNDRY_PROJECT_ENDPOINT` | Day 5〜6 で Agent Service を使う場合のみ。Foundry ポータル → プロジェクトの概要 → エンドポイント | Agent Service 用 |
 | `AZURE_STORAGE_CONNECTION_STRING` | 任意 (PDF永続化する場合のみ) | Blob 接続 |
@@ -253,9 +257,9 @@ python -c "from app.tools import document_intelligence as di; \
 > ⚠ 詳細は [docs/SETUP_AZURE.md セクション 8](./SETUP_AZURE.md#8-リソース作成--採用パス-ポータル手動) を参照。ここでは要点のみ。
 
 1. **Microsoft Foundry リソース作成** — Azure ポータルで `Foundry (おすすめ)` を選択。リージョン East US、リソースグループ `rg-mahted-dev`、名前 `mahted-foundry`、デフォルトプロジェクト `proj-default`
-2. **GPT-4o デプロイ** — Foundry ポータル ([ai.azure.com](https://ai.azure.com)) → 「モデル + エンドポイント」→ gpt-4o (2024-11-20, Global Standard, TPM 30K)
+2. **GPT-4o デプロイ** — Foundry ポータル ([ai.azure.com](https://ai.azure.com)) → 「モデル + エンドポイント」→ gpt-4o (**2024-11-20**, **Standard**, **TPM 50K**)。新規アカウントでは Global Standard を選ぶとクォータ 0 で詰まるため、最初から Standard を選ぶのが実績ベースの正解。子リソース (例: `<名前>-<ランダム>-eastus2`) が East US 2 に自動作成される
 3. **Document Intelligence (F0)** — Azure ポータルで別途作成、リージョンとリソースグループは Foundry と同じ
-4. **`backend/.env` 作成** — Foundry / DI の Endpoint と Key を貼る
+4. **`backend/.env` 作成** — 子リソースの Endpoint (ベースURL部分のみ) と Key、DI の Endpoint と Key を貼る
 5. **疎通確認** — `python -c "from openai import AzureOpenAI; ..."` (詳細は SETUP_AZURE.md §8-5)
 
 ### 旧パス (azd up) は当面使わない
