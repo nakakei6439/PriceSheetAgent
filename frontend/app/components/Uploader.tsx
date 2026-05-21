@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ExtractionResult } from "../types";
 import { ResultTable } from "./ResultTable";
 import { AgentTrace } from "./AgentTrace";
@@ -12,6 +12,17 @@ export function Uploader() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ExtractionResult | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!file) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
 
   async function handleSubmit() {
     if (!file) return;
@@ -29,6 +40,18 @@ export function Uploader() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function downloadJson() {
+    if (!result) return;
+    const json = JSON.stringify(result, null, 2);
+    const blob = new Blob([json], { type: "application/json;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${result.meta.invoice_id ?? file?.name.replace(/\.[^.]+$/, "") ?? "price-sheet"}-result.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   function downloadCsv() {
@@ -74,12 +97,20 @@ export function Uploader() {
             {loading ? "抽出中..." : "抽出する"}
           </button>
           {result && (
-            <button
-              onClick={downloadCsv}
-              className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
-            >
-              CSV ダウンロード
-            </button>
+            <>
+              <button
+                onClick={downloadJson}
+                className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+              >
+                JSON ダウンロード
+              </button>
+              <button
+                onClick={downloadCsv}
+                className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+              >
+                CSV ダウンロード
+              </button>
+            </>
           )}
         </div>
         {error && (
@@ -87,12 +118,84 @@ export function Uploader() {
         )}
       </section>
 
+      {file && previewUrl && (
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <FileReview file={file} previewUrl={previewUrl} />
+          <div className="space-y-6">
+            {result ? (
+              <>
+                <AgentTrace trace={result.trace} mathOk={result.math_check_passed} warnings={result.warnings} />
+                <JsonPreview result={result} />
+              </>
+            ) : (
+              <section className="rounded-lg border border-zinc-200 bg-white p-4 text-sm text-zinc-600 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
+                抽出後、ここに実行ログとJSONプレビューが表示されます。
+              </section>
+            )}
+          </div>
+        </div>
+      )}
+
       {result && (
-        <>
-          <AgentTrace trace={result.trace} mathOk={result.math_check_passed} warnings={result.warnings} />
-          <ResultTable result={result} />
-        </>
+        <ResultTable result={result} />
       )}
     </div>
   );
+}
+
+function FileReview({ file, previewUrl }: { file: File; previewUrl: string }) {
+  const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+  const isImage = file.type.startsWith("image/");
+
+  return (
+    <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold">ファイルレビュー</h2>
+          <p className="mt-1 max-w-xl truncate text-sm text-zinc-600 dark:text-zinc-400">{file.name}</p>
+        </div>
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-zinc-500">
+          <dt>形式</dt>
+          <dd className="text-right">{file.type || "unknown"}</dd>
+          <dt>サイズ</dt>
+          <dd className="text-right">{formatFileSize(file.size)}</dd>
+        </dl>
+      </div>
+      <div className="mt-4 h-[520px] overflow-hidden rounded border border-zinc-200 bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-950">
+        {isPdf && (
+          <object data={previewUrl} type="application/pdf" className="h-full w-full">
+            <a className="p-4 text-sm text-blue-600" href={previewUrl} target="_blank" rel="noreferrer">
+              PDFを開く
+            </a>
+          </object>
+        )}
+        {isImage && !isPdf && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={previewUrl} alt={file.name} className="h-full w-full object-contain" />
+        )}
+        {!isPdf && !isImage && (
+          <div className="flex h-full items-center justify-center text-sm text-zinc-500">
+            プレビューできないファイル形式です
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function JsonPreview({ result }: { result: ExtractionResult }) {
+  return (
+    <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+      <h2 className="text-sm font-semibold">JSONプレビュー</h2>
+      <pre className="mt-3 max-h-72 overflow-auto rounded bg-zinc-950 p-3 text-xs leading-relaxed text-zinc-100">
+        {JSON.stringify(result, null, 2)}
+      </pre>
+    </section>
+  );
+}
+
+function formatFileSize(size: number) {
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+  return `${(size / 1024 / 1024).toFixed(1)} MB`;
 }

@@ -39,7 +39,7 @@
 
 ---
 
-## 1. 現状ステータス (Last updated: 2026-05-21, degraded PDF 追加 + ローカル検証入口まで完了)
+## 1. 現状ステータス (Last updated: 2026-05-21, ファイルレビューUI + 小型エージェントログまで完了)
 
 ### 採用したデプロイ方針
 **Azure ポータルから手動でリソースを作成する** (Foundry 中心) パスを採用。`azd up` (Bicep) は付録扱い。理由は `docs/SETUP_AZURE.md` セクション 8 冒頭を参照。
@@ -71,6 +71,7 @@
 | **エージェント E2E 動作確認 (clean PDF)** | ✅ | DI → verify_math失敗 (税問題) → **GPT-4o Vision にフォールバック** → trace記録 → ExtractionResult を返す、まで動作 |
 | **税考慮検算 + 商品コード正規化** | ✅ | `InvoiceMeta.subtotal/tax` 追加、DI の `SubTotal`/`TotalTax` 取得、税相当差分の許容、商品コード改行/空白除去 |
 | **degraded PDF サンプル追加** | ✅ | `samples/{ja_invoice_a,ja_invoice_b,en_invoice_a,en_invoice_b}_degraded.pdf` (各1ページ, 764KB〜900KB) |
+| **ファイルレビューUI + JSON出力UI** | ✅ | アップロードファイルのPDF/画像プレビュー、小型エージェントログ、JSONプレビュー、JSONダウンロードを追加 |
 | **ローカル静的検証** | ✅ | `pytest backend/tests/ -v` 5件 PASS / `cd frontend && npx tsc --noEmit` PASS |
 | GitHub リモート作成・初回 push | ✅ | `origin` → `https://github.com/nakakei6439/PriceSheetAgent.git` |
 | 初回コミット〜直近 | ✅ | local commits `dbdb718`, `a88a8e6`, `be86d70`, `5df2034`, `afb17bf`, `5c3a086`, `87f62e6`, `267dfa9` |
