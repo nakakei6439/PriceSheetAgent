@@ -44,7 +44,7 @@
 ### 🚀 公開 URL (本番)
 | 層 | URL | ホスト |
 |---|---|---|
-| フロント | https://frontend-black-seven-8rk8zc74cd.vercel.app | Vercel (project: `frontend`, scope `nakakei6439s-projects`) |
+| フロント | https://price-sheet-agent.vercel.app | Vercel (project: `price-sheet-agent`, scope `nakakei6439s-projects`) |
 | バックエンド | https://mahted-backend.ashycliff-fac33dac.eastus.azurecontainerapps.io | Azure Container Apps (`rg-mahted-dev` / env `mahted-env`) |
 
 **デプロイ構成の要点 (Day 7〜9 で確定)**
@@ -52,8 +52,9 @@
   理由: `az acr build` (ACR Tasks) が当サブスクリプションで `TasksOperationsNotAllowed` で禁止 + ローカル docker 無し。
 - Container App は ACR の `mahted-backend:latest` を pull。Azure キー類は **Container App のシークレット/環境変数**に投入
   (`AZURE_OPENAI_API_KEY`/`DOCUMENT_INTELLIGENCE_KEY` は secretref)。**`min-replicas=0` (scale-to-zero) — デモ期間だけ起動・無負荷時は課金停止**。初回リクエストはコールドスタート 5〜10秒。デモ直前に `/health` を叩いて warmup 推奨。常時起動に戻すなら `az containerapp update -n mahted-backend -g rg-mahted-dev --min-replicas 1`。
-- CORS は `CORS_ORIGINS` env に Vercel の本番エイリアス群を設定済み。FE は build 時 `NEXT_PUBLIC_API_URL` に BE FQDN を inline
+- CORS は `CORS_ORIGINS` env に `https://price-sheet-agent.vercel.app`（+ `-nakakei6439s-projects` 別名, localhost）を設定済み。FE は build 時 `NEXT_PUBLIC_API_URL` に BE FQDN を inline
   (Vercel プロジェクト env の Production に永続化済み)。
+- 公開URL `price-sheet-agent.vercel.app` はプロジェクトリネーム＋`vercel alias set` で取得。**Vercel Authentication (SSO保護) は無効化済み** (有効だと審査員がアクセスできず 401。`vercel project protection disable --sso` で解除)。
 - 本番 E2E 済み: `POST /extract` に `ja_invoice_a_degraded_heavy.pdf` → HTTP 200、trace 4ステップ
   (`document_intelligence → verify_math(warn) → gpt4o_vision → verify_math(warn)`)、CORS preflight 200。
 
