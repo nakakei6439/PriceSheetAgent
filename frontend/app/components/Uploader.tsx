@@ -13,6 +13,7 @@ export function Uploader() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ExtractionResult | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [jsonCopied, setJsonCopied] = useState(false);
 
   useEffect(() => {
     if (!file) {
@@ -29,6 +30,7 @@ export function Uploader() {
     setLoading(true);
     setError(null);
     setResult(null);
+    setJsonCopied(false);
     try {
       const fd = new FormData();
       fd.append("file", file);
@@ -52,6 +54,17 @@ export function Uploader() {
     a.download = `${result.meta.invoice_id ?? file?.name.replace(/\.[^.]+$/, "") ?? "price-sheet"}-result.json`;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function copyJsonToClipboard() {
+    if (!result) return;
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(result, null, 2));
+      setJsonCopied(true);
+      window.setTimeout(() => setJsonCopied(false), 1800);
+    } catch {
+      setError("JSONをクリップボードにコピーできませんでした");
+    }
   }
 
   function downloadCsv() {
@@ -118,6 +131,10 @@ export function Uploader() {
         )}
       </section>
 
+      {result && (
+        <ResultTable result={result} />
+      )}
+
       {file && previewUrl && (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
           <FileReview file={file} previewUrl={previewUrl} />
@@ -125,7 +142,7 @@ export function Uploader() {
             {result ? (
               <>
                 <AgentTrace trace={result.trace} mathOk={result.math_check_passed} warnings={result.warnings} />
-                <JsonPreview result={result} />
+                <JsonPreview copied={jsonCopied} onCopy={copyJsonToClipboard} result={result} />
               </>
             ) : (
               <section className="rounded-lg border border-zinc-200 bg-white p-4 text-sm text-zinc-600 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
@@ -134,10 +151,6 @@ export function Uploader() {
             )}
           </div>
         </div>
-      )}
-
-      {result && (
-        <ResultTable result={result} />
       )}
     </div>
   );
@@ -183,10 +196,26 @@ function FileReview({ file, previewUrl }: { file: File; previewUrl: string }) {
   );
 }
 
-function JsonPreview({ result }: { result: ExtractionResult }) {
+function JsonPreview({
+  copied,
+  onCopy,
+  result,
+}: {
+  copied: boolean;
+  onCopy: () => void;
+  result: ExtractionResult;
+}) {
   return (
     <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-      <h2 className="text-sm font-semibold">JSONプレビュー</h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold">JSONプレビュー</h2>
+        <button
+          onClick={onCopy}
+          className="rounded border border-zinc-300 px-2.5 py-1 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+        >
+          {copied ? "コピー済み" : "コピー"}
+        </button>
+      </div>
       <pre className="mt-3 max-h-72 overflow-auto rounded bg-zinc-950 p-3 text-xs leading-relaxed text-zinc-100">
         {JSON.stringify(result, null, 2)}
       </pre>
