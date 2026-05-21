@@ -112,6 +112,12 @@ export function Uploader() {
           {result && (
             <>
               <button
+                onClick={copyJsonToClipboard}
+                className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+              >
+                {jsonCopied ? "JSON コピー済み" : "JSON コピー"}
+              </button>
+              <button
                 onClick={downloadJson}
                 className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700"
               >
