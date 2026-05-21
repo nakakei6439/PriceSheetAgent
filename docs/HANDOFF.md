@@ -39,7 +39,7 @@
 
 ---
 
-## 1. 現状ステータス (Last updated: 2026-05-21, 税考慮検算 + 商品コード正規化まで完了)
+## 1. 現状ステータス (Last updated: 2026-05-21, degraded PDF 追加 + ローカル検証入口まで完了)
 
 ### 採用したデプロイ方針
 **Azure ポータルから手動でリソースを作成する** (Foundry 中心) パスを採用。`azd up` (Bicep) は付録扱い。理由は `docs/SETUP_AZURE.md` セクション 8 冒頭を参照。
@@ -61,7 +61,7 @@
 | **GPT-4o デプロイ** | ✅ | デプロイ名 `gpt-4o` / 2024-11-20 / **Standard** / **TPM 50K, RPM 300** / 子リソース `nakak-mpeo8drm-eastus2` (East US 2) 経由 |
 | **`backend/.env` 作成 + キー類設定** | ✅ | Azure OpenAI と DI 両方完了。`.gitignore` 済みでローカルのみ |
 | **Python 3.12 venv + 依存インストール** | ✅ | `backend/.venv/`、`pip install -r requirements.txt` 完走 |
-| **`pytest tests/` (verify_math)** | ✅ 3件 PASS | `backend/tests/test_verify_math.py` |
+| **`pytest tests/` (verify_math)** | ✅ 5件 PASS | `backend/tests/test_verify_math.py` |
 | **Azure OpenAI 疎通テスト** | ✅ | gpt-4o → "pong" 受信 |
 | **Document Intelligence リソース作成** | ✅ | `mahted-di` (F0, East US) — `https://mahted-di.cognitiveservices.azure.com/` |
 | **DI 疎通テスト (公開サンプル)** | ✅ | CONTOSO LTD 請求書を prebuilt-invoice で正しく抽出 |
@@ -70,16 +70,19 @@
 | **DI による clean PDF 抽出検証** | ✅ | JA: vendor `テクノロジー商事株式会社`, 6明細, conf 0.88 / EN: vendor `NORTHWIND COMPONENTS, INC.`, 6明細, conf 0.94 |
 | **エージェント E2E 動作確認 (clean PDF)** | ✅ | DI → verify_math失敗 (税問題) → **GPT-4o Vision にフォールバック** → trace記録 → ExtractionResult を返す、まで動作 |
 | **税考慮検算 + 商品コード正規化** | ✅ | `InvoiceMeta.subtotal/tax` 追加、DI の `SubTotal`/`TotalTax` 取得、税相当差分の許容、商品コード改行/空白除去 |
+| **degraded PDF サンプル追加** | ✅ | `samples/{ja_invoice_a,ja_invoice_b,en_invoice_a,en_invoice_b}_degraded.pdf` (各1ページ, 764KB〜900KB) |
+| **ローカル静的検証** | ✅ | `pytest backend/tests/ -v` 5件 PASS / `cd frontend && npx tsc --noEmit` PASS |
 | GitHub リモート作成・初回 push | ✅ | `origin` → `https://github.com/nakakei6439/PriceSheetAgent.git` |
-| 初回コミット〜直近 | ✅ | local commits `dbdb718`, `a88a8e6`, `be86d70`, `5df2034`, `afb17bf`, `5c3a086`, `87f62e6` |
+| 初回コミット〜直近 | ✅ | local commits `dbdb718`, `a88a8e6`, `be86d70`, `5df2034`, `afb17bf`, `5c3a086`, `87f62e6`, `267dfa9` |
 
 ### 既知の改善余地 / 未完了
 
 **コード側 (Day 3〜4 で対応推奨)**
 - [ ] degraded PDF で、DI 信頼度低下 → GPT-4o Vision フォールバック → 検算通過/警告表示の実挙動を確認
+  - Codex 実行環境では `mahted-di.cognitiveservices.azure.com` の DNS 解決に失敗し、Azure DI 呼び出しが止まった。ユーザの通常ターミナルなど外部ネットワークが通る環境で再実行すること。
 
 **ユーザ作業 (今すぐできる)**
-- [ ] `samples/*_clean.pdf` を **紙印刷 → スキャン/スマホ撮影 → PDF化** → `samples/*_degraded.pdf` を作成 (本プロジェクトの核となる劣化PDF。最低 `ja_invoice_a_degraded.pdf` 1枚)
+- [x] `samples/*_clean.pdf` を **紙印刷 → スキャン/スマホ撮影 → PDF化** → `samples/*_degraded.pdf` を作成 (本プロジェクトの核となる劣化PDF)
 - [ ] ハッカソン特設 Discord に参加 (公式ページの招待リンク)
 
 **ハッカソン後**
