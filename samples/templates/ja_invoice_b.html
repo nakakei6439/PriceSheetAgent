@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>御請求明細書 — みどり物産</title>
+<style>
+  @page { size: A4; margin: 16mm; }
+  body { font-family: "Yu Mincho", "Hiragino Mincho ProN", serif; color: #111; font-size: 10.5pt; }
+  .header { display:flex; justify-content: space-between; align-items: flex-end; border-bottom: 4px solid #2a5d3b; padding-bottom: 8px; }
+  .header h1 { font-size: 22pt; margin: 0; color: #2a5d3b; letter-spacing: 0.2em; }
+  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0 18px; font-size: 10pt; }
+  .meta-grid .box { border: 1px solid #888; padding: 8px 10px; }
+  .meta-grid .label { color: #666; font-size: 8.5pt; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border-bottom: 1px solid #333; padding: 5px 7px; }
+  thead th { border-top: 2px solid #2a5d3b; border-bottom: 2px solid #2a5d3b; background: #e8f0ea; font-size: 9.5pt; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.code { font-family: "SFMono-Regular", "Courier New", monospace; font-size: 9.5pt; }
+  .total-row { border-top: 2px solid #2a5d3b; background:#f4f9f5; font-weight: 700; }
+  .note { margin-top: 18px; font-size: 9pt; color: #444; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <h1>御請求明細書</h1>
+    <div style="margin-top:4px; font-size: 9.5pt; color:#444;">Invoice / Statement of Charges</div>
+  </div>
+  <div style="text-align:right;">
+    <div style="font-weight:700; font-size: 12pt;">みどり物産 株式会社</div>
+    <div style="font-size:9.5pt; color:#444; margin-top:4px;">
+      〒460-0008 名古屋市中区栄 3-12-5<br>
+      TEL: 052-555-7890 / FAX: 052-555-7891<br>
+      適格請求書発行事業者 T9876543210987
+    </div>
+  </div>
+</div>
+
+<div class="meta-grid">
+  <div class="box">
+    <div class="label">御客様名 (Bill To)</div>
+    <div style="margin-top:4px;"><strong>合同会社 みらいテック</strong> 御中</div>
+    <div style="font-size:9.5pt; color:#444; margin-top:4px;">〒530-0001 大阪市北区梅田 4-1-15</div>
+  </div>
+  <div class="box">
+    <div class="label">請求情報</div>
+    <div style="margin-top:4px;">
+      請求書 No.: <strong>MD-26-A0289</strong><br>
+      発行日: 令和8年5月12日 / 締切日: 令和8年5月10日<br>
+      お支払期限: 令和8年6月20日
+    </div>
+  </div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>No.</th>
+      <th style="width:18%;">品番</th>
+      <th>商品名・摘要</th>
+      <th style="width:8%;">数量</th>
+      <th style="width:6%;">単位</th>
+      <th style="width:12%;">単価 (税抜)</th>
+      <th style="width:12%;">金額 (税抜)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td class="code">MD/AG-002</td><td>有機栽培 米 こしひかり 5kg</td><td class="num">120</td><td>袋</td><td class="num">3,480</td><td class="num">417,600</td></tr>
+    <tr><td>2</td><td class="code">MD/AG-117</td><td>国産小麦 強力粉 業務用 25kg</td><td class="num">40</td><td>袋</td><td class="num">8,200</td><td class="num">328,000</td></tr>
+    <tr><td>3</td><td class="code">MD/FR-21A</td><td>冷凍ブルーベリー (チリ産) 2kg/ケース</td><td class="num">30</td><td>箱</td><td class="num">2,950</td><td class="num">88,500</td></tr>
+    <tr><td>4</td><td class="code">MD/SP-310</td><td>ハーブミックス スパイス調味料 1kg</td><td class="num">15</td><td>袋</td><td class="num">4,600</td><td class="num">69,000</td></tr>
+    <tr><td>5</td><td class="code">MD/PK-VAC-S</td><td>真空パック包装 (S サイズ) 1000枚入</td><td class="num">2</td><td>箱</td><td class="num">14,800</td><td class="num">29,600</td></tr>
+    <tr><td>6</td><td class="code">MD/LG-FRG-PL</td><td>冷蔵パレット輸送 大阪→名古屋</td><td class="num">3</td><td>件</td><td class="num">22,000</td><td class="num">66,000</td></tr>
+    <tr><td>7</td><td class="code">MD/DSC-MAY26</td><td>5月度キャンペーン値引</td><td class="num">1</td><td>式</td><td class="num">-25,000</td><td class="num">-25,000</td></tr>
+    <tr><td colspan="6" style="text-align:right; font-weight:600;">小計</td><td class="num">973,700</td></tr>
+    <tr><td colspan="6" style="text-align:right;">消費税 (軽減税率 8% 対象 / 該当: No.1〜4, 7)</td><td class="num">70,488</td></tr>
+    <tr><td colspan="6" style="text-align:right;">消費税 (10% 対象 / 該当: No.5, 6)</td><td class="num">9,560</td></tr>
+    <tr class="total-row"><td colspan="6" style="text-align:right; font-size: 12pt;">ご請求金額 合計</td><td class="num" style="font-size: 12pt;">¥1,053,748</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  ※ 軽減税率対象品目: 飲食料品 (No.1〜4) および値引項目 (No.7) は 8% 税率を適用しております。<br>
+  ※ お振込先: 三井住友銀行 名古屋駅前支店 普通 9876543 ミドリブツサン(カ<br>
+  ※ ご質問は accounting@midori-bussan.example.jp までご連絡ください。
+</div>
+</body>
+</html>

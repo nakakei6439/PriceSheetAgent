@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Invoice — Northwind Components, Inc.</title>
+<style>
+  @page { size: A4; margin: 18mm; }
+  body { font-family: "Helvetica Neue", Arial, sans-serif; color: #111; font-size: 11pt; }
+  .top { display:flex; justify-content: space-between; margin-bottom: 16px; }
+  .brand { font-size: 26pt; font-weight: 800; letter-spacing: -0.02em; color: #0c4a6e; }
+  .brand .sub { font-size: 10pt; font-weight: 500; color: #4b6b7f; display: block; margin-top: 2px; letter-spacing: 0.05em; }
+  .invoice-label { font-size: 28pt; color: #555; letter-spacing: 0.1em; }
+  .panel { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0 18px; }
+  .panel .box .label { color: #888; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.08em; }
+  .panel .box .val { margin-top: 3px; font-size: 10.5pt; line-height: 1.5; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  th { background: #0c4a6e; color: white; text-align: left; padding: 7px 9px; font-size: 9.5pt; letter-spacing: 0.05em; }
+  td { padding: 7px 9px; border-bottom: 1px solid #ddd; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.code { font-family: "SFMono-Regular", "Courier New", monospace; font-size: 10pt; }
+  .totals { width: 40%; margin-left: auto; margin-top: 12px; }
+  .totals td { padding: 4px 9px; border: none; }
+  .totals .total { border-top: 2px solid #0c4a6e; font-weight: 700; font-size: 13pt; color: #0c4a6e; }
+  .notes { margin-top: 22px; padding: 10px 12px; background: #f4f8fb; border-left: 4px solid #0c4a6e; font-size: 10pt; }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand">
+    NORTHWIND
+    <span class="sub">COMPONENTS, INC. — Industrial Supplies</span>
+  </div>
+  <div style="text-align:right;">
+    <div class="invoice-label">INVOICE</div>
+    <div style="font-size:10pt; color:#666; margin-top:6px;">Invoice #: <strong>NWC-2026-05-431</strong></div>
+    <div style="font-size:10pt; color:#666;">Issue Date: <strong>May 14, 2026</strong></div>
+    <div style="font-size:10pt; color:#666;">Due Date: <strong>Jun 13, 2026</strong></div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="box">
+    <div class="label">Bill To</div>
+    <div class="val">
+      <strong>Acme Robotics LLC</strong><br>
+      Attn: Accounts Payable<br>
+      4521 Maple Avenue, Suite 200<br>
+      Austin, TX 78701, USA<br>
+      VAT/Tax ID: US-58-2031983
+    </div>
+  </div>
+  <div class="box">
+    <div class="label">From</div>
+    <div class="val">
+      Northwind Components, Inc.<br>
+      1280 Industrial Pkwy, Building C<br>
+      Chicago, IL 60607, USA<br>
+      EIN: 81-4729103 · accounts@northwind-components.example.com
+    </div>
+  </div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Item Code</th>
+      <th>Description</th>
+      <th style="text-align:right;">Qty</th>
+      <th style="text-align:right;">Unit Price</th>
+      <th style="text-align:right;">Amount (USD)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td class="code">NWC-MTR-12V-30A</td><td>Brushless DC Motor 12V 30A, IP65</td><td class="num">25</td><td class="num">$78.40</td><td class="num">$1,960.00</td></tr>
+    <tr><td class="code">NWC-PSU-24V-500W</td><td>Industrial PSU 24V 500W with overload protection</td><td class="num">8</td><td class="num">$142.00</td><td class="num">$1,136.00</td></tr>
+    <tr><td class="code">NWC-CBL-CAT6A-50</td><td>Cat6A Shielded Patch Cable 50ft</td><td class="num">40</td><td class="num">$18.75</td><td class="num">$750.00</td></tr>
+    <tr><td class="code">NWC-RLY-SSR-40A</td><td>Solid State Relay 40A AC w/ heatsink</td><td class="num">12</td><td class="num">$32.90</td><td class="num">$394.80</td></tr>
+    <tr><td class="code">NWC-SENS-ENC-1024</td><td>Optical Rotary Encoder 1024 PPR</td><td class="num">6</td><td class="num">$215.00</td><td class="num">$1,290.00</td></tr>
+    <tr><td class="code">NWC-FRT-EXP-2D</td><td>Expedited 2-Day Freight (US Continental)</td><td class="num">1</td><td class="num">$84.00</td><td class="num">$84.00</td></tr>
+  </tbody>
+</table>
+
+<table class="totals">
+  <tr><td>Subtotal</td><td class="num">$5,614.80</td></tr>
+  <tr><td>Sales Tax (8.25%)</td><td class="num">$463.22</td></tr>
+  <tr><td>Discount (Net-30 Loyalty)</td><td class="num">-$120.00</td></tr>
+  <tr class="total"><td>Total Due (USD)</td><td class="num">$5,958.02</td></tr>
+</table>
+
+<div class="notes">
+  <strong>Payment Terms:</strong> Net 30. Wire transfers preferred — Chase Bank routing 021000021, account 1234567890, name "Northwind Components Inc.".
+  Late payments after due date are subject to 1.5% monthly finance charge. Questions: ar@northwind-components.example.com / +1 (312) 555-0184.
+</div>
+</body>
+</html>

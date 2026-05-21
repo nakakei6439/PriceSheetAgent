@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Statement — Contoso Pharma EU GmbH</title>
+<style>
+  @page { size: A4; margin: 14mm; }
+  body { font-family: Georgia, "Times New Roman", serif; color: #111; font-size: 10pt; line-height: 1.4; }
+  .head { border-bottom: 1px solid #555; padding-bottom: 6px; margin-bottom: 10px; display:flex; justify-content:space-between; }
+  .head .logo { font-size: 18pt; font-weight: 700; color: #6d2e2e; letter-spacing: 0.05em; }
+  .head .right { text-align: right; font-size: 9.5pt; color: #444; }
+  .doctype { background: #6d2e2e; color: #fff; padding: 4px 10px; display: inline-block; font-size: 11pt; letter-spacing: 0.1em; }
+  .row { display: flex; gap: 18px; margin: 8px 0; }
+  .row > div { flex: 1; font-size: 9.5pt; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 9.5pt; }
+  th, td { border: 1px solid #999; padding: 4px 6px; }
+  th { background: #f4e9e9; font-size: 9pt; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.code { font-family: monospace; }
+  tfoot td { font-weight: 600; }
+  .stamp-paid { color: #2a5d3b; border: 2px solid #2a5d3b; padding: 2px 8px; transform: rotate(-3deg); display: inline-block; font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="head">
+  <div>
+    <div class="logo">Contoso Pharma EU</div>
+    <div style="font-size:9pt; color:#666;">Pharmaceutical Distribution · GmbH · Munich, Germany</div>
+  </div>
+  <div class="right">
+    Friedrichstraße 88, 80802 München, Germany<br>
+    VAT-ID: DE 305 829 471 · IBAN: DE89 3704 0044 0532 0130 00<br>
+    invoicing@contoso-pharma-eu.example.de · +49 89 555 31200
+  </div>
+</div>
+
+<div style="margin: 4px 0 12px 0;">
+  <span class="doctype">INVOICE / RECHNUNG</span>
+</div>
+
+<div class="row">
+  <div>
+    <div style="color:#666; font-size: 9pt;">CUSTOMER</div>
+    <strong>St. Bernhard Hospital Trust</strong><br>
+    Procurement Office<br>
+    12 Willow Lane, Cambridge CB1 2AB, United Kingdom<br>
+    Customer No.: <strong>CP-UK-00482</strong>
+  </div>
+  <div>
+    <div style="color:#666; font-size: 9pt;">INVOICE DETAILS</div>
+    Invoice #: <strong>CPE/INV/2026/0788</strong><br>
+    Issued: 09 May 2026 · Period: Apr-2026<br>
+    Payment Terms: Net 60 · Due: 08 Jul 2026<br>
+    Currency: EUR · Order Ref: PO-2026-1198
+  </div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width:5%;">#</th>
+      <th style="width:14%;">Product Code</th>
+      <th>Description</th>
+      <th style="width:7%;">Lot</th>
+      <th style="width:7%;">Qty</th>
+      <th style="width:5%;">UoM</th>
+      <th style="width:11%;">Unit Price</th>
+      <th style="width:6%;">VAT</th>
+      <th style="width:12%;">Net Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td class="code">CP-ANTB-AMOX-500</td><td>Amoxicillin 500mg, 21 cap blister</td><td class="code">L26-A411</td><td class="num">800</td><td>box</td><td class="num">€12.40</td><td class="num">7%</td><td class="num">€9,920.00</td></tr>
+    <tr><td>2</td><td class="code">CP-VAX-FLU-Q26</td><td>Quadrivalent Influenza Vaccine, 10-dose vial</td><td class="code">L26-V019</td><td class="num">60</td><td>vial</td><td class="num">€96.00</td><td class="num">0%</td><td class="num">€5,760.00</td></tr>
+    <tr><td>3</td><td class="code">CP-IV-NS09-500</td><td>Normal Saline 0.9% IV Bag 500ml</td><td class="code">L26-S128</td><td class="num">1500</td><td>bag</td><td class="num">€2.10</td><td class="num">7%</td><td class="num">€3,150.00</td></tr>
+    <tr><td>4</td><td class="code">CP-SUR-GLOV-L</td><td>Sterile Surgical Gloves Latex Size L (50 pairs)</td><td class="code">L26-G287</td><td class="num">120</td><td>pack</td><td class="num">€18.50</td><td class="num">19%</td><td class="num">€2,220.00</td></tr>
+    <tr><td>5</td><td class="code">CP-TST-COVID-AG</td><td>SARS-CoV-2 Antigen Rapid Test (25 pcs)</td><td class="code">L26-T562</td><td class="num">80</td><td>kit</td><td class="num">€72.00</td><td class="num">7%</td><td class="num">€5,760.00</td></tr>
+    <tr><td>6</td><td class="code">CP-CLDLOG-EU</td><td>Cold-chain logistics surcharge (intra-EU)</td><td class="code">—</td><td class="num">1</td><td>each</td><td class="num">€185.00</td><td class="num">19%</td><td class="num">€185.00</td></tr>
+  </tbody>
+  <tfoot>
+    <tr><td colspan="8" style="text-align:right;">Net Subtotal</td><td class="num">€26,995.00</td></tr>
+    <tr><td colspan="8" style="text-align:right;">VAT 7%</td><td class="num">€1,317.30</td></tr>
+    <tr><td colspan="8" style="text-align:right;">VAT 19%</td><td class="num">€456.95</td></tr>
+    <tr><td colspan="8" style="text-align:right; font-size: 11pt;"><strong>TOTAL DUE (EUR)</strong></td><td class="num" style="font-size: 11pt;"><strong>€28,769.25</strong></td></tr>
+  </tfoot>
+</table>
+
+<p style="margin-top: 14px; font-size: 9pt; color: #555;">
+  Goods supplied subject to Contoso Pharma EU GmbH's general terms of sale. Reverse-charge VAT may apply to intra-EU B2B transactions per Directive 2006/112/EC, Art. 196.
+  For payment queries please reference the invoice number above. Bank: Commerzbank München.
+</p>
+</body>
+</html>
