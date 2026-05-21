@@ -39,7 +39,28 @@
 
 ---
 
-## 1. 現状ステータス (Last updated: 2026-05-21, デモ方針確定 + 自己検証ループ可視化まで完了)
+## 1. 現状ステータス (Last updated: 2026-05-21, 本番デプロイ完了 — BE/Container Apps + FE/Vercel が公開稼働)
+
+### 🚀 公開 URL (本番)
+| 層 | URL | ホスト |
+|---|---|---|
+| フロント | https://frontend-black-seven-8rk8zc74cd.vercel.app | Vercel (project: `frontend`, scope `nakakei6439s-projects`) |
+| バックエンド | https://mahted-backend.ashycliff-fac33dac.eastus.azurecontainerapps.io | Azure Container Apps (`rg-mahted-dev` / env `mahted-env`) |
+
+**デプロイ構成の要点 (Day 7〜9 で確定)**
+- BE イメージは **GitHub Actions でビルド → ACR (`ca634368e688acr`) へ push** (`.github/workflows/build-backend.yml`)。
+  理由: `az acr build` (ACR Tasks) が当サブスクリプションで `TasksOperationsNotAllowed` で禁止 + ローカル docker 無し。
+- Container App は ACR の `mahted-backend:latest` を pull。Azure キー類は **Container App のシークレット/環境変数**に投入
+  (`AZURE_OPENAI_API_KEY`/`DOCUMENT_INTELLIGENCE_KEY` は secretref)。`min-replicas=1` でコールドスタート回避。
+- CORS は `CORS_ORIGINS` env に Vercel の本番エイリアス群を設定済み。FE は build 時 `NEXT_PUBLIC_API_URL` に BE FQDN を inline
+  (Vercel プロジェクト env の Production に永続化済み)。
+- 本番 E2E 済み: `POST /extract` に `ja_invoice_a_degraded_heavy.pdf` → HTTP 200、trace 4ステップ
+  (`document_intelligence → verify_math(warn) → gpt4o_vision → verify_math(warn)`)、CORS preflight 200。
+
+**再デプロイ手順**
+- BE コード変更時: `backend/**` を push → Actions が自動ビルド&push → `az containerapp update -n mahted-backend -g rg-mahted-dev --image ca634368e688acr.azurecr.io/mahted-backend:latest` で新リビジョン反映。
+- FE 変更時: `cd frontend && vercel deploy --prod --yes --scope nakakei6439s-projects` (env はプロジェクトに永続化済み)。
+- ⚠ env 変更で複数リビジョンが active になったら、単一リビジョンモードのため旧リビジョンを `az containerapp revision deactivate` で落とす。
 
 ### 採用したデプロイ方針
 **Azure ポータルから手動でリソースを作成する** (Foundry 中心) パスを採用。`azd up` (Bicep) は付録扱い。理由は `docs/SETUP_AZURE.md` セクション 8 冒頭を参照。
@@ -367,13 +388,13 @@ cd frontend && npx vercel
 - [ ] エラーハンドリングUI改善 (大きすぎるPDF、タイムアウト)
 - [ ] AgentTrace のアニメーション (リアルタイム感)
 - [x] サンプルPDFのワンクリック試用ボタン (デモ用)
-- [ ] Vercel preview デプロイ
+- [x] Vercel 本番デプロイ (2026-05-21, preview を飛ばして prod 公開)
 
 ### Day 9 (5/29): 本番E2E
-- [ ] Container Apps への docker image push 確認
-- [ ] フロント本番デプロイ、URL を Zenn 記事に貼る
-- [ ] 日英×劣化/クリーンの全サンプルで動作確認
-- [ ] エラーケース動作 (壊れたPDF、空ファイル)
+- [x] Container Apps への image push & デプロイ確認 (GitHub Actions → ACR → Container Apps)
+- [x] フロント本番デプロイ (URL は §1 公開URL表。Zenn 記事に貼る)
+- [ ] 日英×劣化/クリーンの全サンプルで本番動作確認 (heavy ja_a は確認済み)
+- [ ] エラーケース動作 (壊れたPDF、空ファイル) を本番URLで再確認
 
 ### Day 10 (5/30): 提出物制作
 - [ ] デモ動画 3〜5 分 (Loom or QuickTime 画面録画)
