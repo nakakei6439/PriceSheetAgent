@@ -2,23 +2,32 @@
 
 Microsoft Agent Hackathon 2026 応募作品。
 
+🌐 **デモ: https://price-sheet-agent.vercel.app** （トップの「⭐推奨デモ」ボタンですぐ試せます）
+
 Excel → PDF → 紙印刷 → スキャン → PDF と"参照リレー"を経て劣化した価格通知書・仕切り価格通知書・価格表 PDF から、商品コード・品名・数量・単価・金額を Azure エージェントが自己検証ループで抽出する Web アプリ。
+
+## なぜ「自己検証」なのか（本作の核）
+
+OCR/AI の `confidence` は当てになりません。**Azure Document Intelligence は劣化スキャンでも `confidence 99%` を返しながら単価の桁を誤読します**。そこで本作は confidence ではなく **検算（数量×単価＝金額、明細合計≒文書合計）でエージェントに自分を疑わせ**、矛盾を検知したら GPT-4o Vision にヒント付きで再抽出させ、**直せない分は warnings として正直に申告**します。
+
+実行ログ（trace）に「① 抽出 → ② 検算で不整合検知 → ③ ↻ 自己修正で再抽出 → ④ 残差を提示」という推論チェーンが可視化されるのが見どころです。
 
 ## アーキテクチャ
 
 ```
-[Next.js (Vercel)]
+[Next.js 16 (Vercel)]
         │ POST /extract (multipart PDF)
         ▼
-[FastAPI on Azure Container Apps]
-        │
-        ▼
+[FastAPI (Azure Container Apps)]
+        │ run(pdf_bytes)
 [agent.py 自己検証ループ]
-   ├── extract_with_document_intelligence  (Prebuilt-Invoice, price sheet extraction)
-   ├── extract_with_gpt4o_vision           (Azure OpenAI GPT-4o)
-   └── verify_math                         (Pure Python 検算)
+   1) document_intelligence (prebuilt-invoice) で抽出
+   2) verify_math: 数量×単価≒金額 / 明細合計≒文書合計 を検算
+        └ 不整合を検知したら ▼
+   3) gpt4o_vision に「どこが合わない」ヒント付きで再抽出 (Azure OpenAI GPT-4o)
+   4) verify_math 再検算 → 残差は warnings に
         │
-        ▼ JSON (line_items, trace, confidence)
+        ▼ ExtractionResult (meta, line_items, trace, warnings)
 [Next.js: ファイルレビュー + 結果テーブル + AgentTrace + JSON/CSV 出力]
 ```
 
@@ -62,9 +71,16 @@ cp .env.local.example .env.local   # NEXT_PUBLIC_API_URL=http://localhost:8000
 npm run dev
 ```
 
+## デプロイ
+
+- フロント: Vercel（本番 https://price-sheet-agent.vercel.app）
+- バックエンド: Azure Container Apps（`rg-mahted-dev` / `mahted-backend`、scale-to-zero）
+- イメージビルド: GitHub Actions → ACR（`az acr build` が当サブスクで禁止のため。`.github/workflows/build-backend.yml`）
+- 詳細・再デプロイ手順は [`docs/HANDOFF.md`](docs/HANDOFF.md) §1 を参照
+
 ## 提出物
 
-- 公開URL: TBD (Vercel)
+- 公開URL: https://price-sheet-agent.vercel.app
 - GitHub: https://github.com/nakakei6439/PriceSheetAgent
 - Zenn 記事: `docs/zenn_article.md`
 - デモ動画: TBD
