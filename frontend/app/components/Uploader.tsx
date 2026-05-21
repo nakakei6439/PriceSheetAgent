@@ -6,6 +6,18 @@ import { ResultTable } from "./ResultTable";
 import { AgentTrace } from "./AgentTrace";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const SAMPLE_BASE_URL =
+  process.env.NEXT_PUBLIC_SAMPLE_BASE_URL ??
+  "https://raw.githubusercontent.com/nakakei6439/PriceSheetAgent/main/samples";
+const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
+
+const SAMPLE_FILES = [
+  { name: "⭐推奨デモ (自己検証ループ)", fileName: "ja_invoice_a_degraded_heavy.pdf" },
+  { name: "日本語A degraded", fileName: "ja_invoice_a_degraded.pdf" },
+  { name: "日本語B degraded", fileName: "ja_invoice_b_degraded.pdf" },
+  { name: "English A degraded", fileName: "en_invoice_a_degraded.pdf" },
+  { name: "English B degraded", fileName: "en_invoice_b_degraded.pdf" },
+];
 
 export function Uploader() {
   const [file, setFile] = useState<File | null>(null);
@@ -14,6 +26,7 @@ export function Uploader() {
   const [result, setResult] = useState<ExtractionResult | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [jsonCopied, setJsonCopied] = useState(false);
+  const [sampleLoading, setSampleLoading] = useState<string | null>(null);
 
   useEffect(() => {
     if (!file) {
@@ -27,6 +40,10 @@ export function Uploader() {
 
   async function handleSubmit() {
     if (!file) return;
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setError(`ファイルサイズは ${formatFileSize(MAX_UPLOAD_BYTES)} 以下にしてください`);
+      return;
+    }
     setLoading(true);
     setError(null);
     setResult(null);
@@ -35,12 +52,30 @@ export function Uploader() {
       const fd = new FormData();
       fd.append("file", file);
       const res = await fetch(`${API_URL}/extract`, { method: "POST", body: fd });
-      if (!res.ok) throw new Error(`API error: ${res.status} ${await res.text()}`);
+      if (!res.ok) throw new Error(await formatApiError(res));
       setResult((await res.json()) as ExtractionResult);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadSample(fileName: string) {
+    setSampleLoading(fileName);
+    setError(null);
+    setResult(null);
+    setJsonCopied(false);
+    try {
+      const res = await fetch(`${SAMPLE_BASE_URL}/${fileName}`);
+      if (!res.ok) throw new Error(`サンプルPDFを取得できませんでした: ${res.status}`);
+      const blob = await res.blob();
+      const sampleFile = new File([blob], fileName, { type: "application/pdf" });
+      setFile(sampleFile);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSampleLoading(null);
     }
   }
 
@@ -98,9 +133,30 @@ export function Uploader() {
         <input
           type="file"
           accept=".pdf,.png,.jpg,.jpeg"
-          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          onChange={(e) => {
+            setFile(e.target.files?.[0] ?? null);
+            setError(null);
+            setResult(null);
+            setJsonCopied(false);
+          }}
           className="mt-2 block w-full text-sm file:mr-4 file:rounded-md file:border-0 file:bg-zinc-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-zinc-700 dark:file:bg-zinc-100 dark:file:text-zinc-900"
         />
+        <div className="mt-4">
+          <p className="text-xs font-medium text-zinc-500">デモ用サンプル</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {SAMPLE_FILES.map((sample) => (
+              <button
+                key={sample.fileName}
+                type="button"
+                onClick={() => loadSample(sample.fileName)}
+                disabled={sampleLoading !== null || loading}
+                className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+              >
+                {sampleLoading === sample.fileName ? "読込中..." : sample.name}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="mt-4 flex items-center gap-3">
           <button
             onClick={handleSubmit}
@@ -233,4 +289,19 @@ function formatFileSize(size: number) {
   if (size < 1024) return `${size} B`;
   if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
   return `${(size / 1024 / 1024).toFixed(1)} MB`;
+}
+
+async function formatApiError(res: Response) {
+  const fallback = `API error: ${res.status}`;
+  const cloned = res.clone();
+  try {
+    const payload = await res.json();
+    if (payload && typeof payload.detail === "string") {
+      return `${fallback} - ${payload.detail}`;
+    }
+  } catch {
+    const text = await cloned.text().catch(() => "");
+    if (text) return `${fallback} - ${text}`;
+  }
+  return fallback;
 }

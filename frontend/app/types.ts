@@ -26,6 +26,7 @@ export type TraceStep = {
   duration_ms: number;
   confidence: number | null;
   note: string | null;
+  status?: "ok" | "warn" | "info" | null;
 };
 
 export type ExtractionResult = {

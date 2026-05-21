@@ -65,6 +65,8 @@ def _client() -> AzureOpenAI:
         api_key=s.azure_openai_api_key,
         api_version=s.azure_openai_api_version,
         azure_endpoint=s.azure_openai_endpoint,
+        timeout=s.azure_openai_timeout,
+        max_retries=s.azure_openai_max_retries,
     )
 
 

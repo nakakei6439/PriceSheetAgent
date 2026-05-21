@@ -39,7 +39,7 @@
 
 ---
 
-## 1. 現状ステータス (Last updated: 2026-05-21, PriceSheetAgent 表記同期まで完了)
+## 1. 現状ステータス (Last updated: 2026-05-21, デモ方針確定 + 自己検証ループ可視化まで完了)
 
 ### 採用したデプロイ方針
 **Azure ポータルから手動でリソースを作成する** (Foundry 中心) パスを採用。`azd up` (Bicep) は付録扱い。理由は `docs/SETUP_AZURE.md` セクション 8 冒頭を参照。
@@ -72,16 +72,32 @@
 | **税考慮検算 + 商品コード正規化** | ✅ | `InvoiceMeta.subtotal/tax` 追加、DI の `SubTotal`/`TotalTax` 取得、税相当差分の許容、商品コード改行/空白除去 |
 | **degraded PDF サンプル追加** | ✅ | `samples/{ja_invoice_a,ja_invoice_b,en_invoice_a,en_invoice_b}_degraded.pdf` (各1ページ, 764KB〜900KB) |
 | **ファイルレビューUI + JSON出力UI** | ✅ | アップロードファイルのPDF/画像プレビュー、小型エージェントログ、JSONプレビュー、JSONコピー/JSONダウンロードを追加 |
+| **デモ用サンプル選択UI** | ✅ | degraded PDF 4件をボタンで読み込める導線を追加 (`NEXT_PUBLIC_SAMPLE_BASE_URL` で取得元差し替え可) |
+| **APIエラー処理改善** | ✅ | `/extract` で 15MB 上限、Azure DI/OpenAI失敗時の 502、フロント側の読みやすいエラー表示を追加 |
+| **制限ネットワーク向け build 安定化** | ✅ | Google Fonts 取得依存を外し、`npm run build` は `next build --webpack` に固定 |
 | **PriceSheetAgent 表記同期** | ✅ | 公開名・メタデータ・README・引き継ぎ文言を価格通知書/価格表PDF向けに更新 |
-| **ローカル静的検証** | ✅ | `pytest backend/tests/ -v` 5件 PASS / `cd frontend && npx tsc --noEmit` PASS / `npm run build` PASS |
+| **ローカル静的検証** | ✅ | `backend/.venv/bin/pytest backend/tests/ -v` 9件 PASS / `cd frontend && npx tsc --noEmit` PASS / `npm run build` PASS |
 | GitHub リモート作成・初回 push | ✅ | `origin` → `https://github.com/nakakei6439/PriceSheetAgent.git` |
 | 初回コミット〜直近 | ✅ | `main` は `origin/main` に push 済み |
 
 ### 既知の改善余地 / 未完了
 
 **コード側 (Day 3〜4 で対応推奨)**
-- [ ] degraded PDF で、DI 信頼度低下 → GPT-4o Vision フォールバック → 検算通過/警告表示の実挙動を確認
-  - Codex 実行環境では `mahted-di.cognitiveservices.azure.com` の DNS 解決に失敗し、Azure DI 呼び出しが止まった。ユーザの通常ターミナルなど外部ネットワークが通る環境で再実行すること。
+- [x] degraded PDF で agent.run() の E2E 実機確認 (2026-05-21, ネットワーク疎通環境)
+  - degraded 4件すべて **DI 単独で抽出成功** (avg_conf 0.86〜0.96)、`math_check_passed=True`、warnings なし、明細6〜7件を正しく抽出。
+  - `/extract` 経由でも HTTP 200 で同結果。空ファイルは 400 を確認。
+  - degraded PDF は実体としてスキャン画像 (テキスト0字・全面画像1枚) だが、スキャン品質が良く DI が高精度で読めるため、**`CONFIDENCE_FLOOR=0.6` を割らず GPT-4o Vision フォールバックが一度も発火しない**。
+- [x] **デモ方針確定 (2026-05-21): 自己検証ループ (`verify_math`) を主役にする**。録画動画中心。
+  - **trace 可視化バグを修正**: `agent.run()` を `stamp_result` のリスト再構築に依存しない実装へ変更し、検算ステップを明示的に積み上げるようにした (`agent.py`)。これで「DI が自信満々で抽出 → 検算が不整合を検知 → ヒント付きで自己修正再抽出 → 残差を正直に提示」の **4ステップ推論チェーンが UI に出る**。
+  - `TraceStep.status` (`ok`/`warn`/`info`) を追加 (`models.py`/`types.ts`)、`AgentTrace.tsx` で番号バッジを色分け + 「不整合検知」「↻ 自己修正」「整合」チップを表示。
+  - **推奨デモサンプル = `samples/ja_invoice_a_degraded_heavy.pdf`** に確定。DI avg_conf=0.99 (信頼度フォールバックは発火しない) なのに `verify_math` が桁誤読5件を検知 → 自己修正ループが発火。Vision でも完全救済はできず残差5件を warnings で正直提示 → ナラティブ「自分の誤りに気づいて再試行し、直せない分は正直に出す」を体現。`Uploader.tsx` の先頭に「⭐推奨デモ」ボタンとして追加 (GitHub push 後に raw URL から取得可能)。
+- 2026-05-21 の追加検証で以下が判明 (上記方針の根拠):
+  - **Azure DI は劣化に非常に頑健**。確信度を `CONFIDENCE_FLOOR=0.6` 未満まで落とすには、**GPT-4o Vision でも桁を誤読するレベルの強劣化**が必要。「DI が諦める → Vision が完璧に救済」というキレイな窓はほぼ存在しない。
+  - DI の `confidence` は過信ぎみで当てにならない場合あり (avg_conf 0.99 と報告しつつ単価の桁を誤読する例を確認)。
+  - **実質の Agentic 見せ場は「検算ループ」の方**。劣化PDFでは DI/GPT-4o が桁を誤読 → `verify_math` が `qty×unit≠amount` を検知 → GPT-4o に hint 付きで再抽出、という連鎖が trace (`document_intelligence → gpt4o_vision → verify_math`) に現れる。結果は「完璧救済」ではなく「残差を warnings として正直に提示」になる。デモ・審査ではこの自己検証の正直さを前面に出すのが現実的。
+  - heavy 劣化サンプル生成器 `samples/make_heavy_degraded.py` を追加 (Pillow + pdf2image)。env 変数で劣化強度を調整可。`hash()` のプロセス毎ランダム化バグを `hashlib.sha256` 決定論シードに修正済み。`samples/*_degraded_heavy.pdf` 4件は生成済みで残置 (デモ方針確定後に採用/再生成を判断)。
+  - (旧メモ) Codex 環境の DI DNS 解決失敗はサンドボックス固有。通常ターミナルでは疎通する。
+- [x] **GPT-4o Vision にタイムアウト/リトライ上限を設定済み (2026-05-21)** — `gpt4o_vision.py` の `AzureOpenAI` クライアントに `timeout`/`max_retries` を注入 (既定 60秒/2回, `settings.py` の `azure_openai_timeout`/`azure_openai_max_retries` で調整可)。heavy 劣化PDFの数分ハング対策。
 
 **ユーザ作業 (今すぐできる)**
 - [x] `samples/*_clean.pdf` を **紙印刷 → スキャン/スマホ撮影 → PDF化** → `samples/*_degraded.pdf` を作成 (本プロジェクトの核となる劣化PDF)
@@ -339,6 +355,7 @@ cd frontend && npx vercel
 - [ ] サンプルPDFで `gpt4o_vision.py` がローカル実行できる
 - [ ] `agent.py` の `run()` が end-to-end で `ExtractionResult` を返す
 - [ ] FastAPI 経由で curl `POST /extract -F file=@samples/xx.pdf` が動く
+- [x] `/extract` の入力エラー・外部サービス失敗を画面で読める形に整備
 
 ### Day 5〜6 (5/25〜5/26): エージェント高度化 (任意)
 - [ ] AI Foundry プロジェクト作成 (ポータル or Bicep 追加)
@@ -349,7 +366,7 @@ cd frontend && npx vercel
 ### Day 7〜8 (5/27〜5/28): フロント仕上げ
 - [ ] エラーハンドリングUI改善 (大きすぎるPDF、タイムアウト)
 - [ ] AgentTrace のアニメーション (リアルタイム感)
-- [ ] サンプルPDFのワンクリック試用ボタン (デモ用)
+- [x] サンプルPDFのワンクリック試用ボタン (デモ用)
 - [ ] Vercel preview デプロイ
 
 ### Day 9 (5/29): 本番E2E
@@ -383,6 +400,11 @@ cd frontend && npx vercel
 | **JSON Schema strict mode** | `gpt4o_vision.py` で `"strict": true` 使用。スキーマ違反でエラーになるので変更時は慎重に |
 | **CORS** | `CORS_ORIGINS` 未設定だと本番でブラウザが弾く。Vercel の本番URLを必ず追加 |
 | **trace 形式** | `TraceStep` のフィールドはフロントが直接参照。`agent.py` を書き換えても **形式を維持** |
+| **サンプルPDF取得元** | フロントのデモ用ボタンは `NEXT_PUBLIC_SAMPLE_BASE_URL` を参照。既定は GitHub raw URL なので、公開前や別ブランチ検証では `.env.local` で差し替える |
+| **Next.js build** | 制限ネットワーク・sandbox でも通るよう `next/font/google` は使わず、`npm run build` は `next build --webpack`。Turbopack は環境によって internal port bind で落ちることがある |
+| **Azure DI は劣化に強い / confidence 過信** | prebuilt-invoice は低画質スキャンでも高 confidence で読む。avg_conf 0.99 報告でも桁誤読あり。`CONFIDENCE_FLOOR=0.6` の確信度フォールバックは滅多に発火しない前提で設計・デモすること (実質の自己検証は `verify_math` ループ側) |
+| **GPT-4o Vision の timeout 未設定** | 強劣化画像で呼び出しが数分ハングする事例あり。`gpt4o_vision.py` の `AzureOpenAI` クライアントに `timeout` / `max_retries` を設定しないと本番でリクエストが詰まる |
+| **劣化サンプル生成** | `samples/make_heavy_degraded.py` で `*_degraded.pdf` → `*_degraded_heavy.pdf` を再現生成 (env 変数で強度調整)。シードは `hashlib.sha256` 決定論。実行は Azure 課金 (GPT-4o) を伴うので多重実行に注意 |
 
 ---
 

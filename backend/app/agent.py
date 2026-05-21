@@ -14,13 +14,14 @@ from __future__ import annotations
 
 import re
 
-from app.models import ExtractionResult, LineItem, TraceStep
+from app.models import ExtractionResult, InvoiceMeta, LineItem, TraceStep
 from app.tools import document_intelligence as di
 from app.tools import gpt4o_vision as vision
 from app.tools import verify_math
 
 
 CONFIDENCE_FLOOR = 0.6
+MAX_VISION_CALLS = 1  # フォールバック/再抽出を含む Vision 呼び出しの上限
 
 
 def _normalize_product_code(value: str | None) -> str | None:
@@ -54,15 +55,30 @@ def _merge(di_items: list[LineItem], vis_items: list[LineItem]) -> list[LineItem
     return _normalize_items(merged)
 
 
+def _verify(items: list[LineItem], meta: InvoiceMeta, trace: list[TraceStep]) -> tuple[bool, list[str]]:
+    """検算を実行し, その TraceStep を trace に追記して (passed, warnings) を返す."""
+    passed, warnings, step = verify_math.verify(
+        items,
+        meta.total,
+        subtotal=meta.subtotal,
+        tax=meta.tax,
+    )
+    trace.append(step)
+    return passed, warnings
+
+
 def run(pdf_bytes: bytes) -> ExtractionResult:
     trace: list[TraceStep] = []
+    vision_calls = 0
 
     meta, di_items, di_step = di.extract(pdf_bytes)
+    di_step.status = "info"
     trace.append(di_step)
 
     avg_conf = (sum(i.confidence for i in di_items) / len(di_items)) if di_items else 0.0
     items: list[LineItem] = _normalize_items(di_items)
 
+    # 信頼度フォールバック (劣化が極端な場合のみ. 通常は発火しない)
     if not di_items or avg_conf < CONFIDENCE_FLOOR:
         hint = (
             f"DIの平均信頼度が {avg_conf:.2f} と低いです. 各明細を慎重に再抽出してください."
@@ -70,18 +86,31 @@ def run(pdf_bytes: bytes) -> ExtractionResult:
             else "DIで明細が抽出できませんでした. 画像から全明細を抽出してください."
         )
         vis_items, vis_step, currency = vision.extract(pdf_bytes, hint=hint)
+        vis_step.status = "info"
         trace.append(vis_step)
+        vision_calls += 1
         items = _merge(di_items, vis_items)
         if currency and not meta.currency:
             meta.currency = currency
 
-    result = verify_math.stamp_result(items, meta.total, meta, trace)
+    # 1回目の自己検証 (この "検知" ステップを trace に残すのが肝)
+    passed, warnings = _verify(items, meta, trace)
 
-    if not result.math_check_passed and len(trace) < 3:
-        hint = "計算が合いません: " + " / ".join(result.warnings[:3])
+    # 不整合を検知したら, ヒント付きで再抽出する自己修正ループ
+    if not passed and vision_calls < MAX_VISION_CALLS:
+        hint = "計算が合いません: " + " / ".join(warnings[:3])
         vis_items, vis_step, _ = vision.extract(pdf_bytes, hint=hint)
+        vis_step.status = "info"
+        vis_step.reason = f"検算で {len(warnings)} 件の不整合を検知 → 該当明細を再抽出"
         trace.append(vis_step)
+        vision_calls += 1
         items = _merge(items, vis_items)
-        result = verify_math.stamp_result(items, meta.total, meta, trace)
+        passed, warnings = _verify(items, meta, trace)
 
-    return result
+    return ExtractionResult(
+        meta=meta,
+        line_items=items,
+        trace=trace,
+        math_check_passed=passed,
+        warnings=warnings,
+    )

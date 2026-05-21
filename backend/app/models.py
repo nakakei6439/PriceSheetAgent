@@ -30,6 +30,7 @@ class TraceStep(BaseModel):
     duration_ms: int
     confidence: float | None = None
     note: str | None = None
+    status: Literal["ok", "warn", "info"] | None = None
 
 
 class ExtractionResult(BaseModel):

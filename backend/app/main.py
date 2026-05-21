@@ -1,5 +1,7 @@
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from azure.core.exceptions import AzureError
+from openai import OpenAIError
 
 from app.agent import run as run_agent
 from app.models import ExtractionResult
@@ -30,4 +32,12 @@ async def extract(file: UploadFile = File(...)) -> ExtractionResult:
     pdf_bytes = await file.read()
     if not pdf_bytes:
         raise HTTPException(status_code=400, detail="空のファイルです")
-    return run_agent(pdf_bytes)
+    if len(pdf_bytes) > settings.max_upload_bytes:
+        max_mb = settings.max_upload_bytes / 1024 / 1024
+        raise HTTPException(status_code=413, detail=f"ファイルサイズは {max_mb:.0f}MB 以下にしてください")
+    try:
+        return run_agent(pdf_bytes)
+    except AzureError as exc:
+        raise HTTPException(status_code=502, detail=f"Azure Document Intelligence の呼び出しに失敗しました: {exc}") from exc
+    except OpenAIError as exc:
+        raise HTTPException(status_code=502, detail=f"Azure OpenAI の呼び出しに失敗しました: {exc}") from exc

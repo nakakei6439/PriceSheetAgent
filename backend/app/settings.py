@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     azure_openai_api_key: str = ""
     azure_openai_api_version: str = "2024-10-21"
     azure_openai_gpt4o_deployment: str = "gpt-4o"
+    azure_openai_timeout: float = 60.0
+    azure_openai_max_retries: int = 2
 
     ai_foundry_project_endpoint: str = ""
     ai_foundry_model_deployment: str = "gpt-4o"
@@ -19,6 +21,7 @@ class Settings(BaseSettings):
     azure_storage_connection_string: str = ""
 
     cors_origins: str = "http://localhost:3000"
+    max_upload_bytes: int = 15 * 1024 * 1024
 
     @property
     def cors_origin_list(self) -> list[str]:

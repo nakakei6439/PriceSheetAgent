@@ -71,11 +71,16 @@ def verify(
 
     passed = len(warnings) == 0
     elapsed = int((time.time() - started) * 1000)
+    if passed:
+        note = "整合 OK (qty×unit≈amount, 明細合計≈文書合計)"
+    else:
+        note = f"不整合{len(warnings)}件: {warnings[0]}"
     trace = TraceStep(
         tool="verify_math",
         reason="抽出後の数値整合性チェック",
         duration_ms=elapsed,
-        note=f"{'OK' if passed else f'{len(warnings)} warnings'}",
+        note=note,
+        status="ok" if passed else "warn",
     )
     return passed, warnings, trace
 
