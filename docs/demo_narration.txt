@@ -1,0 +1,17 @@
+PriceSheetAgent は、劣化した価格通知書や価格表 PDF から、商品コード、数量、単価、金額を抽出する Azure エージェントです。
+
+実務では、Excel から PDF 化され、印刷され、さらにスキャンされた書類がよくあります。OCR や AI の confidence が高くても、単価の桁を間違えることがあります。
+
+そこでこのアプリでは、まず Azure AI Document Intelligence で構造化抽出し、その後に数量かける単価が金額と合っているかを検算します。計算が合わなければ、Microsoft Foundry 経由の GPT-4o Vision に、どの明細が合わないかをヒントとして渡し、再抽出します。
+
+実際に推奨デモを実行します。ここで劣化 PDF が読み込まれ、抽出が始まります。バックエンドは Azure Container Apps 上で動いていて、初回だけ少し待つ場合があります。
+
+結果を見ると、明細テーブルだけでなく、右側にエージェント実行ログが出ます。
+
+ログでは、Document Intelligence が高い confidence で抽出した後、検算ステップが不整合を検知しています。その結果、GPT-4o Vision が自己修正として再抽出され、最後にもう一度検算しています。
+
+重要なのは、直せなかった箇所を隠さず warnings として出すことです。業務では、全部正しいと言い切るより、確認すべき箇所を明示する方が安全です。
+
+構成は、フロントエンドが Next.js on Vercel、バックエンドが FastAPI on Azure Container Apps、抽出に Azure AI Document Intelligence、再抽出に Microsoft Foundry / Azure OpenAI GPT-4o Vision を使っています。
+
+PriceSheetAgent は、価格表処理の確認工数を減らしつつ、人間が見るべき箇所を明確にする、実務向けの自己検証型エージェントです。

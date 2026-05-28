@@ -7,7 +7,8 @@ This repository follows the [agents.md](https://agents.md/) convention. Any AI c
 - **Project**: PriceSheetAgent — Azure agent that extracts product codes and prices from multi-format / Japanese-English price notice and price sheet PDFs, including degraded scans (Excel → PDF → printed → scanned → PDF).
 - **Submission**: Microsoft Agent Hackathon 2026 (individual track), deadline **2026-06-01 23:59 JST**.
 - **Stack**: Python 3.12 + FastAPI (backend) · Next.js 16 + Tailwind v4 (frontend) · Azure Document Intelligence + Microsoft Foundry / Azure OpenAI GPT-4o.
-- **Current state**: Day 1〜2 complete — Azure resources provisioned (portal manual path), Python venv ready, all SDK connectivity verified, `agent.run()` end-to-end working on clean PDFs. About to start Day 3〜4 (backend tuning + degraded PDF tests).
+- **Live**: frontend https://price-sheet-agent.vercel.app · backend https://mahted-backend.ashycliff-fac33dac.eastus.azurecontainerapps.io
+- **Current state (2026-05-21)**: 本番デプロイ完了・公開稼働中。コアパイプ + 自己検証ループ + その trace 可視化まで実装済み、本番URLで実ブラウザ E2E 確認済み。提出物は README/Zenn記事ドラフト/GitHub public/デモ動画URLまで反映済み。**残り: Zenn公開・最終提出**。詳細は `docs/HANDOFF.md` §1。
 
 ## Before you start
 
@@ -25,14 +26,15 @@ This repository follows the [agents.md](https://agents.md/) convention. Any AI c
 
 ## Verification
 
-- `pytest backend/tests/ -v` must stay green.
-- `cd frontend && npx tsc --noEmit` must stay clean.
-- After Azure deploy, `curl $SERVICE_BACKEND_URI/health` should return `{"status":"ok"}`.
+- `backend/.venv/bin/pytest backend/tests/ -v` must stay green（現状10件 PASS）。
+- `cd frontend && npx tsc --noEmit` must stay clean。本番ビルドは `npm run build`（= `next build --webpack`。Turbopack は制限環境で落ちることがあるため webpack 固定）。
+- 本番ヘルス: `curl https://mahted-backend.ashycliff-fac33dac.eastus.azurecontainerapps.io/health` → `{"status":"ok"}`（scale-to-zero のため初回はコールドスタート 5〜10秒）。
 
 ## Handoff prompt for new sessions
 
 ```
 このリポジトリは Microsoft Agent Hackathon 2026 への応募作品 PriceSheetAgent です。
 まず docs/HANDOFF.md を読んでから作業を始めてください。
+本番デプロイ済み（公開URLは HANDOFF §1）。デモ動画URL反映済み。残タスクはZenn公開と最終提出（〜2026-06-01）。
 次のタスク: [ここに具体を書く]
 ```

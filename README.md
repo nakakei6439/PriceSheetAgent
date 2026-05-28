@@ -83,4 +83,4 @@ npm run dev
 - 公開URL: https://price-sheet-agent.vercel.app
 - GitHub: https://github.com/nakakei6439/PriceSheetAgent
 - Zenn 記事: `docs/zenn_article.md`
-- デモ動画: TBD
+- デモ動画: https://youtu.be/VzxOywOETuw

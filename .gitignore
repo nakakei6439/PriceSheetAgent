@@ -34,3 +34,9 @@ azure.env
 
 # Samples (大きなPDFやスキャンデータはコミットしない判断もあり。一旦含める)
 # samples/*.pdf
+
+# Claude Code (local-only)
+.claude/
+
+# Demo narration audio (kept local; published as YouTube video)
+docs/demo_narration.aiff
