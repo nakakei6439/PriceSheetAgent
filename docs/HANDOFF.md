@@ -131,20 +131,16 @@
 
 ### ロードマップ上の現在地
 
-> **Day 1〜2: 環境構築 (完了) → Day 3〜4: バックエンド・コアパイプ (ここに入った)**
+> **Day 1〜10 ほぼ完了 → Day 11: Zenn公開・応募フォーム提出 (残りは最終提出)**
 
-Day 3〜4 で行う作業の入口候補:
-1. degraded PDF で DI 信頼度低下 → GPT-4o Vision フォールバックの実発火確認
-2. FastAPI `/extract` を実 PDF で叩く + フロントから接続テスト
-- [x] GitHubリモートリポジトリ作成 & `git push`
-- [ ] `azd up` 実行 → 出力値を `backend/.env` に貼り付け
-- [ ] バックエンドのローカル動作確認 (`uvicorn`)
-- [ ] フロントのローカル動作確認 (`npm run dev`)
-- [ ] Day 5〜6: AI Foundry Agent Service への置き換え (任意・自前ループでも提出可)
-- [ ] Day 7〜8: Vercel フロントデプロイ
-- [ ] Day 9: 本番 E2E
-- [ ] Day 10: デモ動画 + Zenn記事執筆
-- [ ] Day 11: 提出
+- [x] Day 1〜2: 環境構築 (Azure リソース / venv / 疎通)
+- [x] Day 3〜4: バックエンド・コアパイプ実機検証 (DI / GPT-4o Vision / verify_math / `/extract`)
+- [x] デモ方針確定 + 自己検証ループの trace 可視化
+- [ ] Day 5〜6: AI Foundry Agent Service への置き換え (**任意・スキップ可** — 自前ループでも提出可)
+- [x] Day 7〜8: フロント仕上げ + Vercel 本番デプロイ
+- [x] Day 9: 本番 E2E (Container Apps + Vercel、実ブラウザ確認済み)
+- [x] Day 10: 提出物制作 — README/Zenn記事ドラフト/GitHub public/デモ動画URL反映まで完了。デモ動画: https://youtu.be/VzxOywOETuw
+- [ ] Day 11: 応募フォーム提出 + 全URL有効性の最終確認 (〜2026-06-01)
 
 ---
 
@@ -398,10 +394,12 @@ cd frontend && npx vercel
 - [ ] エラーケース動作 (壊れたPDF、空ファイル) を本番URLで再確認
 
 ### Day 10 (5/30): 提出物制作
-- [ ] デモ動画 3〜5 分 (Loom or QuickTime 画面録画)
-- [ ] `docs/zenn_article.md` 執筆 → Zenn にアップ
-- [ ] アーキ図 (Mermaid / Excalidraw) → `docs/architecture.png`
-- [ ] GitHub リポジトリ public 化 → README 整備
+- [x] デモ動画 3分台本・撮影チェックリスト作成 (`docs/demo_video_script.md`)
+- [x] デモ動画 3〜5 分を YouTube にアップロード: https://youtu.be/VzxOywOETuw
+- [x] `docs/zenn_article.md` 執筆 + デモ動画URL反映
+- [ ] Zenn 記事公開 (`published: true` にして公開URL確定)
+- [ ] アーキ図 (Mermaid / Excalidraw) → `docs/architecture.png` (任意)
+- [x] GitHub リポジトリ public 化 → README 整備
 
 ### Day 11 (5/31): 予備日 / 応募
 - [ ] 全URL有効性確認
@@ -432,7 +430,7 @@ cd frontend && npx vercel
 
 ## 9. 別エージェント (Codex 等) への引き継ぎテンプレ
 
-### 起動プロンプト (コピペ用 / 2026-05-21 時点)
+### 起動プロンプト (コピペ用 / 2026-05-21 時点 — 本番デプロイ完了後)
 
 ```
 このプロジェクトは Microsoft Agent Hackathon 2026 への応募作品 "PriceSheetAgent" です。
@@ -444,50 +442,48 @@ cd frontend && npx vercel
 2. /Users/nakagawakeita/Products/Hackathon/MAHTED/docs/HANDOFF.md
 3. (Azure を触る場合のみ) docs/SETUP_AZURE.md
 
-現状:
-- Azure リソース全て構築済み (Foundry / GPT-4o / DI)
-- Python venv + 依存インストール済み (.venv/ は 3.12)
-- backend/.env はローカルに存在 (.gitignore 済み)
-- ユニットテスト 5件 PASS
-- Azure OpenAI / Document Intelligence 両方疎通済み
-- clean PDF を Chrome headless で生成済み (samples/*_clean.pdf)
-- degraded PDF 4件を samples/ に追加済み
-- ファイルレビュー、JSONプレビュー、JSONコピー/ダウンロードUIを実装済み
-- agent.run() の clean PDF E2E 動作も確認済み (DI → 検算失敗 → GPT-4o Vision フォールバック)
+現状 (本番公開済み):
+- 公開URL: フロント https://price-sheet-agent.vercel.app / バックエンド (Container Apps) は §1 参照
+- Azure リソース構築済み (Foundry / GPT-4o / DI)、backend/.env はローカルに存在 (.gitignore 済み)
+- バックエンド: Azure Container Apps で稼働 (scale-to-zero)。イメージは GitHub Actions → ACR でビルド
+- フロント: Vercel で稼働 (project `price-sheet-agent`)。SSO保護は無効化済み
+- 自己検証ループ実装済み: DI抽出 → verify_math検算 → 不整合検知で GPT-4o Vision 再抽出 → 残差を warnings
+  その推論チェーンは TraceStep.status 付きで UI 可視化済み (検知=warn, 自己修正=↻)
+- 推奨デモサンプル: samples/ja_invoice_a_degraded_heavy.pdf (DI 99%でも桁誤読 → ループ発火)
+- テスト: backend/.venv/bin/pytest backend/tests/ → 10件 PASS。tsc/build PASS
+- 本番URLで実ブラウザ E2E 確認済み (スクショ docs/e2e_prod_demo.png)
+- 提出物: README 整備済み / GitHub public / Zenn記事ドラフト docs/zenn_article.md (published:false) / デモ動画 https://youtu.be/VzxOywOETuw
 
-次に取り組むタスク (どれか選ぶか、ユーザに聞く):
-A. samples/*_degraded.pdf で E2E 確認
-B. FastAPI を起動して /extract をフロントから叩く動作確認
-C. サンプルPDFのワンクリック試用ボタン追加
-D. Day 5〜6 の Foundry Agent Service への置き換え
+残タスク (締切 2026-06-01 23:59 JST):
+A. Zenn記事を published:true で公開し URL を確定
+B. 応募フォーム提出 + 全URL有効性の最終確認
+C. (任意) アーキ図を Mermaid/画像化して docs/ に追加・README/Zennに埋め込み
 
 制約:
-- 締切 2026-06-01 23:59 JST (要・残り日数確認)
 - 個人部門、Python 3.12 (backend) / Next.js 16 (frontend)
 - 既存ファイルの形式 (特に TraceStep スキーマ) は維持
-- Azure OpenAI のエンドポイントは Foundry リソース本体ではなく
-  子リソース nakak-mpeo8drm-eastus2 経由 (HANDOFF.md §4 参照)
+- Azure OpenAI のエンドポイントは Foundry 本体でなく子リソース nakak-mpeo8drm-eastus2 経由 (§4)
 - 不明点は実装前にユーザに確認
 ```
 
-### 直前の対話で残した宿題 (Codex がここから再開する場合)
+### 引き継ぎ時の運用メモ (Codex がここから再開する場合)
 
-`samples/*_degraded.pdf` は追加済みだが、Codex 実行環境では `mahted-di.cognitiveservices.azure.com` の DNS 解決に失敗し、Azure DI 呼び出しが止まった。ユーザの通常ターミナルなど外部ネットワークが通る環境で以下を再実行する:
-
-```bash
-cd backend && source .venv/bin/activate
-python -c "from app.agent import run; import json; result = run(open('../samples/ja_invoice_a_degraded.pdf','rb').read()); print(json.dumps(result.model_dump(), ensure_ascii=False, indent=2))"
-```
-
-### Codex CLI に最適化したいなら
-- リポジトリルートに `AGENTS.md` を作成し、内容を本ファイルへの参照 (`@docs/HANDOFF.md`) にする (Codex CLI は AGENTS.md を自動読み込み)
-- → **これは Day 3 までに実施推奨**
+- **Azure/Vercel の操作には CLI ログインが要る**: `az login`(サブスク `Azure subscription 1` / id 063f422a-…)、`vercel`(scope `nakakei6439s-projects`)、`gh`(nakakei6439)。いずれもユーザ環境で認証済みだが、別マシンでは再ログインが必要。
+- **BE 再デプロイ**: `backend/**` を push → Actions が ACR にビルド&push → `az containerapp update -n mahted-backend -g rg-mahted-dev --image ca634368e688acr.azurecr.io/mahted-backend:latest`。env 更新時は旧リビジョンを `revision deactivate` で落とす (§1)。
+- **FE 再デプロイ**: `cd frontend && vercel deploy --prod --yes --scope nakakei6439s-projects`。
+- **ローカルでの単発確認** (Azure 疎通が要る環境で):
+  ```bash
+  cd backend && source .venv/bin/activate
+  python -c "from app.agent import run; import json; r=run(open('../samples/ja_invoice_a_degraded_heavy.pdf','rb').read()); print(json.dumps([s.model_dump() for s in r.trace], ensure_ascii=False, indent=2))"
+  ```
+  ※旧メモ: 一部サンドボックスは `*.cognitiveservices.azure.com` の DNS 解決に失敗する。通常ターミナルでは疎通する。
 
 ### セッション間で引き継ぐべき "暗黙の決定"
-1. Foundry Agent Service への置き換えは**任意** — 自前ループ実装でも審査要件を満たす
-2. 商品コードは**自由形式** (不定形) を想定 — 業界固定マスタは持たない
-3. 検証は自作サンプルで行う — 機密データは使わない
-4. 提出物は GitHub public + Zenn 公開記事 + 公開 Web URL の3点セット
+1. **デモの主役は verify_math 自己検証ループ** (confidence フォールバックではない)。confidence は過信されるため検算で誤りを捕まえる、というのが本作の核。
+2. Foundry Agent Service への置き換えは**任意** — 自前ループ実装でも審査要件を満たす (未実施)。
+3. 商品コードは**自由形式** (不定形) を想定 — 業界固定マスタは持たない。
+4. 検証は自作サンプルで行う — 機密データは使わない。
+5. 提出物は GitHub public + Zenn 公開記事 + 公開 Web URL + Zenn記事埋め込み用デモ動画 (Web URL は確定済み)。
 
 ---
 
