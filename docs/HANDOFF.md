@@ -39,7 +39,15 @@
 
 ---
 
-## 1. 現状ステータス (Last updated: 2026-05-21, 本番デプロイ完了 — BE/Container Apps + FE/Vercel が公開稼働)
+## 1. 現状ステータス (Last updated: 2026-06-11, **ハッカソン終了・外部クローズ済み** — Azure リソース全削除 + Vercel 本番エイリアス削除で課金停止・公開停止)
+
+> **2026-06-11 クローズ作業の記録**
+> ハッカソン終了 (最終審査会 6/18 には非進出) に伴い外部公開を停止し課金を止めた。
+> - **Azure**: `az group delete -n rg-mahted-dev --yes` で RG ごと全削除 (Foundry / GPT-4o 子リソース `nakak-mpeo8drm-eastus2` / DI / ACR / Container Apps Env+App / Log Analytics)。→ 課金停止。Cognitive Services 系はソフトデリート (48h) で自動消滅、再利用予定なしのため purge は未実施。
+> - **Vercel**: 本番エイリアス 3 件 (`price-sheet-agent.vercel.app` 他) を `vercel alias rm` で削除し公開URLを 404 化。プロジェクト/デプロイ本体は残置 (再エイリアスで復活可能)。※Hobby プランは本番デプロイへの SSO 保護不可のためエイリアス削除で対応。プレビューには SSO 保護を有効化済み。
+> - **GitHub Actions**: `build-backend.yml` を `gh workflow disable` で停止 (ACR 削除後のビルド失敗を回避)。
+> - **GitHub リポジトリ / Zenn 記事 / YouTube デモ動画**: 現状維持 (リポジトリは public のまま、Zenn は published:false ドラフト、動画 https://youtu.be/VzxOywOETuw は残置)。
+> - 復活させる場合: §6 で Azure リソースを再作成 → backend/.env 再設定 → BE 再デプロイ、Vercel は `vercel alias set` で再公開。
 
 ### 🚀 公開 URL (本番)
 | 層 | URL | ホスト |
@@ -126,8 +134,9 @@
 - [ ] ハッカソン特設 Discord に参加 (公式ページの招待リンク)
 
 **ハッカソン後**
-- [ ] Azure OpenAI キーをローテート (画面共有時に部分露出のため)
-- [ ] `rg-mahted-dev` リソースグループ全削除で課金停止
+- [x] ~~Azure OpenAI キーをローテート~~ → **リソース全削除により不要化** (2026-06-11)
+- [x] `rg-mahted-dev` リソースグループ全削除で課金停止 (2026-06-11 実施)
+- [x] Vercel 本番エイリアス削除で公開停止 (2026-06-11 実施)
 
 ### ロードマップ上の現在地
 
