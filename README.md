@@ -2,7 +2,8 @@
 
 Microsoft Agent Hackathon 2026 応募作品。
 
-🌐 **デモ: https://price-sheet-agent.vercel.app** （トップの「⭐推奨デモ」ボタンですぐ試せます）
+🎬 **デモ動画: https://youtu.be/VzxOywOETuw**
+> ⚠️ ハッカソン終了に伴い、ライブデモ（`https://price-sheet-agent.vercel.app`）と Azure バックエンドは **2026-06-11 をもって公開終了**しました（課金停止のため）。動作はデモ動画でご確認ください。ローカル実行は [`docs/HANDOFF.md`](docs/HANDOFF.md) §5 を参照。
 
 Excel → PDF → 紙印刷 → スキャン → PDF と"参照リレー"を経て劣化した価格通知書・仕切り価格通知書・価格表 PDF から、商品コード・品名・数量・単価・金額を Azure エージェントが自己検証ループで抽出する Web アプリ。
 
@@ -73,14 +74,14 @@ npm run dev
 
 ## デプロイ
 
-- フロント: Vercel（本番 https://price-sheet-agent.vercel.app）
-- バックエンド: Azure Container Apps（`rg-mahted-dev` / `mahted-backend`、scale-to-zero）
+- フロント: Vercel（本番 https://price-sheet-agent.vercel.app ※2026-06-11 公開終了）
+- バックエンド: Azure Container Apps（`rg-mahted-dev` / `mahted-backend`、scale-to-zero ※2026-06-11 リソース削除）
 - イメージビルド: GitHub Actions → ACR（`az acr build` が当サブスクで禁止のため。`.github/workflows/build-backend.yml`）
 - 詳細・再デプロイ手順は [`docs/HANDOFF.md`](docs/HANDOFF.md) §1 を参照
 
 ## 提出物
 
-- 公開URL: https://price-sheet-agent.vercel.app
+- 公開URL: https://price-sheet-agent.vercel.app （※2026-06-11 公開終了）
 - GitHub: https://github.com/nakakei6439/PriceSheetAgent
 - Zenn 記事: `docs/zenn_article.md`
 - デモ動画: https://youtu.be/VzxOywOETuw
